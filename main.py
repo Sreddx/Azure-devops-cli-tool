@@ -78,6 +78,8 @@ def main():
     parser.add_argument("--explain", action="store_true", help="Explain all commands and arguments")
     parser.add_argument("--create-hooks-for-filtered-projects", action="store_true",
                         help="Create service hooks for projects filtered by tags")
+    parser.add_argument("--state-changed", action="store_true",
+                        help="If set and event-type=workitem.updated, only trigger when State changes")
 
     # Project-specific commands
     parser.add_argument("--list-work-items", action="store_true", help="List all work items in the project")
@@ -86,7 +88,10 @@ def main():
     parser.add_argument("--work-item-title", help="Title of the new work item")
     parser.add_argument("--work-item-description", help="Description of the new work item")
     parser.add_argument("--list-github-repos", action="store_true", help="List GitHub repositories connected to the project")
-
+    parser.add_argument("--list-subscriptions", action="store_true",
+                        help="List service hook subscriptions for the specified project")
+    
+    
     args = parser.parse_args()
 
     # Handle explain command
@@ -113,13 +118,18 @@ def main():
     # Dispatch table for global operations
     global_operations = {
         "list_projects": lambda: az_commands.list_projects_with_tag_filter(args.filter_tag) if args.filter_tag else az_commands.list_projects(),
+        "list_subscriptions": lambda: az_commands.list_subscriptions(args.project_id),
         "create_hook": lambda: az_commands.create_service_hook(
-            args.project_id, args.event_type, args.hook_url or os.getenv("AZURE_DEVOPS_HOOK_URL") or "https://default-webhook-url.com"
+            project_id=args.project_id,
+            event_type=args.event_type,
+            url=args.hook_url or os.getenv("AZURE_DEVOPS_HOOK_URL") or "https://default-webhook-url.com",
+            state_changed=args.state_changed
         ),
         "create_hooks_for_filtered_projects": lambda: az_commands.create_hooks_for_filtered_projects(
-            args.filter_tag, 
-            args.event_type, 
-            args.hook_url or os.getenv("AZURE_DEVOPS_HOOK_URL") or "https://default-webhook-url.com"
+            target_tags=args.filter_tag,
+            event_type=args.event_type,
+            url=args.hook_url or os.getenv("AZURE_DEVOPS_HOOK_URL") or "https://default-webhook-url.com",
+            state_changed=args.state_changed
         ) if args.filter_tag and args.event_type else print(
             "Error: Missing arguments for creating service hooks. Provide --filter-tag and --event-type."
         )
