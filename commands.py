@@ -64,7 +64,7 @@ class AzureDevOpsCommands(AzureDevOps):
         
         subscription_data = {
             "publisherId": "tfs",
-            "eventType": "workitem.updated",
+            "eventType": event_type,
             "resourceVersion": "5.1",
             "consumerId": "webHooks",
             "consumerActionId": "httpRequest",
@@ -125,26 +125,81 @@ class AzureDevOpsCommands(AzureDevOps):
         else:
             print("No projects matched the specified tags.")
 
-    def create_hooks_for_filtered_projects(self, target_tags, event_type, url, state_changed=False):
+    def create_hooks_for_filtered_projects(self, target_tags, event_type, url, filter_fields=False):
         """
         Creates service hooks for projects that match the specified tags.
 
         Args:
             target_tags (list): List of tags to filter projects by.
-            event_type (str): The event type for the service hook (e.g., 'workitem.created').
+            event_type (str): The event type for the service hook (e.g., 'workitem.updated').
             url (str): The webhook URL for the service hook.
-            only_closed (bool): If True and event_type=workitem.updated, add filter for State=Closed.
+            filter_fields (bool): If True, hooks will be created with specific field tracking.
         """
-        print("Creating service hooks for filtered projects...")
+        print(f"Creating service hooks for projects with tags: {target_tags}")
+
+        # Filter projects by tags
         filtered_projects = self.list_projects_with_tag_filter(target_tags)
-        print("Service hook for projects:")
-        print(filtered_projects)
         if not filtered_projects:
             print("No projects found with the specified tags. No service hooks will be created.")
             return
 
+        # Iterate over filtered projects and create service hooks
         for project in filtered_projects:
             project_id = project["id"]
-            self.create_service_hook(project_id, event_type, url, state_changed=state_changed)
+            print(f"Creating {'filtered' if filter_fields else 'standard'} hook for project: {project['name']} (ID: {project_id})")
+
+            self.create_service_hook(project_id, event_type, url)
 
         print("Service hooks created for all matching projects.")
+
+        
+            
+    
+    def create_service_hooks_for_individual_fields(self, project_id, hook_url):
+        """
+        Creates individual service hooks for `workitem.updated` event for each specific field.
+
+        Args:
+            project_id (str): The project ID (GUID) where the service hooks will be created.
+            hook_url (str): The URL for the webhook.
+        """
+        print(f"Creating service hooks for project ID: {project_id} with field-specific filters.")
+
+        # Define the API endpoint for creating service hooks
+        endpoint = "_apis/hooks/subscriptions?api-version=7.1"
+
+        # List of fields to create individual service hooks for
+        field_filters = [
+            "Microsoft.VSTS.Common.Priority",
+            "Microsoft.VSTS.Scheduling.TargetDate",
+            "System.CommentCount"
+        ]
+
+        for field in field_filters:
+            print(f"Creating service hook for field: {field}")
+
+            # Define the subscription payload for the current field
+            subscription_data = {
+                "publisherId": "tfs",
+                "eventType": "workitem.updated",
+                "resourceVersion": "5.1",
+                "consumerId": "webHooks",
+                "consumerActionId": "httpRequest",
+                "publisherInputs": {
+                    "projectId": project_id,
+                    "changedFields": field  # Set the current field as the filter
+                },
+                "consumerInputs": {
+                    "url": hook_url  # Your webhook endpoint
+                }
+            }
+
+            # Make the POST request to create the service hook
+            response = self.handle_request("POST", endpoint, subscription_data)
+
+            if response.get("statusCode", 0) == 201:
+                print(f"✅ Service hook created successfully for field: {field}")
+            else:
+                print(f"❌ Failed to create service hook for field: {field}. Response: {response}")
+
+
