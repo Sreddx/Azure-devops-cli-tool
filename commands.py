@@ -60,12 +60,12 @@ class AzureDevOpsCommands(AzureDevOps):
 
     def create_service_hook(self, project_id, event_type, hook_url, state_changed=False):
         print(f"Creating service hook for project ID: {project_id} with event: {event_type}")
-        endpoint = "_apis/hooks/subscriptions?api-version=7.1"
+        endpoint = "_apis/hooks/subscriptions?api-version=6.0"
         
         subscription_data = {
             "publisherId": "tfs",
             "eventType": event_type,
-            "resourceVersion": "5.1",
+            "resourceVersion": "1.0",
             "consumerId": "webHooks",
             "consumerActionId": "httpRequest",
             "publisherInputs": {
@@ -125,7 +125,7 @@ class AzureDevOpsCommands(AzureDevOps):
         else:
             print("No projects matched the specified tags.")
 
-    def create_hooks_for_filtered_projects(self, target_tags, event_type, url, filter_fields=False):
+    def create_hooks_for_filtered_projects(self, target_tags, event_type, hook_url, state_changed):
         """
         Creates service hooks for projects that match the specified tags.
 
@@ -146,60 +146,58 @@ class AzureDevOpsCommands(AzureDevOps):
         # Iterate over filtered projects and create service hooks
         for project in filtered_projects:
             project_id = project["id"]
-            print(f"Creating {'filtered' if filter_fields else 'standard'} hook for project: {project['name']} (ID: {project_id})")
+            print(f"Creating hook for project: {project['name']} (ID: {project_id})")
 
-            self.create_service_hook(project_id, event_type, url)
+            self.create_service_hook(project_id, event_type, hook_url, state_changed)
 
         print("Service hooks created for all matching projects.")
 
-        
-            
-    
-    def create_service_hooks_for_individual_fields(self, project_id, hook_url):
+    def list_and_update_webhooks(self, target_tags):
         """
-        Creates individual service hooks for `workitem.updated` event for each specific field.
+        Lists all projects filtered by tags and upgrades their webhooks to resourceVersion: '1.0'.
 
         Args:
-            project_id (str): The project ID (GUID) where the service hooks will be created.
-            hook_url (str): The URL for the webhook.
+            target_tags (list): List of tags to filter projects by.
         """
-        print(f"Creating service hooks for project ID: {project_id} with field-specific filters.")
+        # Reuse the existing list_projects_with_tag_filter method
+        print(f"Filtering projects by tags: {target_tags}")
+        filtered_projects = self.list_projects_with_tag_filter(target_tags)
 
-        # Define the API endpoint for creating service hooks
-        endpoint = "_apis/hooks/subscriptions?api-version=7.1"
+        if not filtered_projects:
+            print("No projects matched the specified tags.")
+            return
 
-        # List of fields to create individual service hooks for
-        field_filters = [
-            "Microsoft.VSTS.Common.Priority",
-            "Microsoft.VSTS.Scheduling.TargetDate",
-            "System.CommentCount"
-        ]
+        # Upgrade webhooks for filtered projects
+        for project in filtered_projects:
+            project_id = project["id"]
+            print(f"Upgrading webhooks for project: {project['name']} (ID: {project_id})")
 
-        for field in field_filters:
-            print(f"Creating service hook for field: {field}")
+            # Get subscriptions
+            endpoint = f"_apis/hooks/subscriptions?publisherId=tfs&publisherInputFilters=projectId={project_id}&api-version=7.1"
+            response = self.handle_request("GET", endpoint)
+            subscriptions = response.get("value", [])
 
-            # Define the subscription payload for the current field
-            subscription_data = {
-                "publisherId": "tfs",
-                "eventType": "workitem.updated",
-                "resourceVersion": "5.1",
-                "consumerId": "webHooks",
-                "consumerActionId": "httpRequest",
-                "publisherInputs": {
-                    "projectId": project_id,
-                    "changedFields": field  # Set the current field as the filter
-                },
-                "consumerInputs": {
-                    "url": hook_url  # Your webhook endpoint
-                }
-            }
+            if not subscriptions:
+                print(f"No webhooks found for project {project['name']} (ID: {project_id}).")
+                continue
 
-            # Make the POST request to create the service hook
-            response = self.handle_request("POST", endpoint, subscription_data)
+            # Update webhooks
+            for sub in subscriptions:
+                if sub.get("eventType") == "workitem.updated":
+                    subscription_id = sub["id"]
+                    sub["resourceVersion"] = "1.0"  # Update the resourceVersion to 1.0
 
-            if response.get("statusCode", 0) == 201:
-                print(f"✅ Service hook created successfully for field: {field}")
-            else:
-                print(f"❌ Failed to create service hook for field: {field}. Response: {response}")
+                    # Update the webhook
+                    update_endpoint = f"_apis/hooks/subscriptions/{subscription_id}?api-version=6.0"
+                    self.handle_request("PUT", update_endpoint, sub)
+                    print(f"Updated webhook {subscription_id} for project {project['name']} to resourceVersion: 1.0")
+
+        print("All applicable webhooks have been updated.")
+
+
+                
+                    
+            
+
 
 
