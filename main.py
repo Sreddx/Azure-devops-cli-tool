@@ -81,9 +81,12 @@ Commands:
       Optional arguments:
         --assigned-to : List of users to filter by (comma-separated).
         --work-item-types : List of work item types (comma-separated).
-        --states : List of states to filter by (comma-separated).
+        --states : List of states to filter by (comma-separated). 
+                   Default: Includes both completed (Closed, Done, Resolved) and active (Active, New, To Do, In Progress) items
         --start-date : Start date for filtering (YYYY-MM-DD format).
+                      For closed items: filters by closed date. For active items: filters by target date.
         --end-date : End date for filtering (YYYY-MM-DD format).
+                    For closed items: filters by closed date. For active items: filters by target date.
         --date-field : Field to use for date filtering (default: ClosedDate).
         --no-efficiency : Skip efficiency calculations for faster results.
         --export-csv : Export results to CSV file.
@@ -146,11 +149,13 @@ def handle_work_item_query(args, organization, personal_access_token):
     """
     Handle work item querying with dynamic filtering and KPI calculations.
     """
-    # Parse comma-separated values
-    assigned_to = args.assigned_to.split(',') if args.assigned_to else None
-    work_item_types = args.work_item_types.split(',') if args.work_item_types else None
-    states = args.states.split(',') if args.states else None
-    project_names = args.project_names.split(',') if args.project_names else None
+    # Parse comma-separated values (strip whitespace)
+    assigned_to = [name.strip() for name in args.assigned_to.split(',')] if args.assigned_to else None
+    work_item_types = [wtype.strip() for wtype in args.work_item_types.split(',')] if args.work_item_types else None
+    states = [state.strip() for state in args.states.split(',')] if args.states else None
+    project_names = [name.strip() for name in args.project_names.split(',')] if args.project_names else None
+    productive_states = [state.strip() for state in args.productive_states.split(',')] if args.productive_states else None
+    blocked_states = [state.strip() for state in args.blocked_states.split(',')] if args.blocked_states else None
     
     # Build additional filters
     additional_filters = {}
@@ -192,6 +197,8 @@ def handle_work_item_query(args, organization, personal_access_token):
         date_field=args.date_field,
         additional_filters=additional_filters if additional_filters else None,
         calculate_efficiency=not args.no_efficiency,
+        productive_states=productive_states,
+        blocked_states=blocked_states,
         all_projects=args.all_projects,
         max_projects=args.max_projects
     )
@@ -220,32 +227,63 @@ def handle_work_item_query(args, organization, personal_access_token):
         print(f"States: {', '.join(filters['states'])}")
     print(f"Date range: {filters.get('date_range', 'Any')}")
     
-    # KPIs
+    # Enhanced KPIs with per-developer metrics
     kpis = result.get('kpis', {})
     if kpis:
-        print(f"\nKPI SUMMARY:")
-        print(f"  On-time delivery: {kpis.get('on_time_delivery_percentage', 0)}%")
-        print(f"  Average efficiency: {kpis.get('average_efficiency_percentage', 0)}%")
-        print(f"  Total active hours: {kpis.get('total_active_hours', 0)}")
-        print(f"  Total blocked hours: {kpis.get('total_blocked_hours', 0)}")
+        # Overall summary
+        overall_summary = kpis.get('overall_summary', {})
+        print(f"\nOVERALL SUMMARY:")
+        print(f"  Total work items: {overall_summary.get('total_work_items', 0)}")
+        print(f"  Total developers: {overall_summary.get('total_developers', 0)}")
+        print(f"  Average fair efficiency: {overall_summary.get('average_fair_efficiency', 0)}%")
+        print(f"  Average delivery score: {overall_summary.get('average_delivery_score', 0)}%")
+        print(f"  Total active hours: {overall_summary.get('total_active_hours', 0)}")
         
+        # Per-developer metrics
+        developer_metrics = kpis.get('developer_metrics', {})
+        if developer_metrics:
+            print(f"\nPER-DEVELOPER METRICS:")
+            for developer, metrics in developer_metrics.items():
+                print(f"\n  📊 {developer}:")
+                print(f"    • Work Items: {metrics.get('total_work_items', 0)} (Completed: {metrics.get('completed_items', 0)})")
+                print(f"    • Completion Rate: {metrics.get('completion_rate', 0)}%")
+                print(f"    • Fair Efficiency Score: {metrics.get('average_fair_efficiency', 0)}%")
+                print(f"    • Delivery Score: {metrics.get('average_delivery_score', 0)}%")
+                print(f"    • Overall Developer Score: {metrics.get('overall_developer_score', 0)}%")
+                print(f"    • On-time Delivery: {metrics.get('on_time_delivery_percentage', 0)}%")
+                print(f"    • Active Hours: {metrics.get('total_active_hours', 0)}h")
+                print(f"    • Avg Days Ahead/Behind Target: {metrics.get('average_days_ahead_behind', 0)}")
+                print(f"    • Reopened Items Handled: {metrics.get('reopened_items_handled', 0)}")
+                print(f"    • Projects Worked On: {metrics.get('projects_count', 0)}")
+                
+                # Delivery timing breakdown
+                timing = metrics.get('delivery_timing_breakdown', {})
+                print(f"    • Delivery Timing: Early:{timing.get('early', 0)} | On-time:{timing.get('on_time', 0)} | Late:{timing.get('late_1_3', 0)+timing.get('late_4_7', 0)+timing.get('late_8_14', 0)+timing.get('late_15_plus', 0)}")
+        
+        # Bottlenecks
         bottlenecks = kpis.get('bottlenecks', [])
         if bottlenecks:
             print(f"\nTOP BOTTLENECKS:")
-            for i, bottleneck in enumerate(bottlenecks[:3], 1):
+            for i, bottleneck in enumerate(bottlenecks[:5], 1):
                 print(f"  {i}. {bottleneck['state']}: {bottleneck['average_time_hours']}h avg ({bottleneck['occurrences']} occurrences)")
     
-    # Work items summary
+    # Enhanced work items summary
     work_items = result.get('work_items', [])
     if work_items:
-        print(f"\nWORK ITEMS SUMMARY:")
+        print(f"\nWORK ITEMS DETAILED SUMMARY:")
         for item in work_items[:5]:  # Show first 5
             efficiency = item.get('efficiency', {})
             project_info = f" | Project: {item.get('project_name', 'Unknown')}" if item.get('project_name') else ""
             print(f"  ID {item['id']}: {item['title'][:50]}...")
             print(f"    Assigned: {item['assigned_to']} | State: {item['state']}{project_info}")
             if efficiency:
-                print(f"    Efficiency: {efficiency.get('efficiency_percentage', 0)}% | Active: {efficiency.get('active_time_hours', 0)}h")
+                print(f"    Traditional Efficiency: {efficiency.get('efficiency_percentage', 0)}%")
+                print(f"    Fair Efficiency Score: {efficiency.get('fair_efficiency_score', 0)}%")
+                print(f"    Delivery Score: {efficiency.get('delivery_score', 0)}%")
+                print(f"    Active Time: {efficiency.get('active_time_hours', 0)}h | Estimated: {efficiency.get('estimated_time_hours', 0)}h")
+                print(f"    Days Ahead/Behind Target: {efficiency.get('days_ahead_behind', 0)}")
+                if efficiency.get('was_reopened', False):
+                    print(f"    ↻ Reopened item (Active after reopen: {efficiency.get('active_after_reopen', 0)}h)")
             print()
         
         if len(work_items) > 5:
@@ -253,7 +291,9 @@ def handle_work_item_query(args, organization, personal_access_token):
     
     # Export to CSV if requested
     if args.export_csv:
-        work_item_ops.export_work_items_to_csv(work_items, args.export_csv)
+        # Use enhanced export function
+        base_filename = args.export_csv.replace('.csv', '')
+        work_item_ops.export_enhanced_work_items_to_csv(work_items, kpis, base_filename)
     
     print("\n" + "="*80)
 
@@ -318,6 +358,8 @@ def main():
     parser.add_argument("--project-names", help="Comma-separated list of project names to filter by (for cross-project queries)")
     parser.add_argument("--all-projects", action="store_true", help="Query all projects (skip smart filtering based on user activity)")
     parser.add_argument("--max-projects", type=int, default=50, help="Maximum number of projects to check for user activity (default: 50)")
+    parser.add_argument("--productive-states", help="Comma-separated list of states considered productive (e.g., 'Active,In Progress,Development')")
+    parser.add_argument("--blocked-states", help="Comma-separated list of states considered blocked (e.g., 'Blocked,On Hold,Waiting')")
     
     args = parser.parse_args()
 

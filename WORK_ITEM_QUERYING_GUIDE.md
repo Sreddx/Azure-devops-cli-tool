@@ -1,273 +1,264 @@
-# Work Item Querying & KPI Analytics Guide
+# Guía de Consultas de Work Items y Análisis KPI
 
-## Overview
+## Descripción General
 
-This guide covers the advanced work item querying capabilities that have been integrated into your Azure DevOps CLI tool. The new functionality allows you to:
+Esta herramienta permite consultar work items de Azure DevOps y calcular métricas de productividad para desarrolladores y equipos. Proporciona análisis detallados de eficiencia, tiempos de entrega y rendimiento del equipo.
 
-- Query work items with dynamic, flexible filtering
-- **Cross-project querying**: Query across all projects or specific projects
-- Calculate time efficiency KPIs and metrics
-- Analyze productivity bottlenecks
-- Export results to CSV for further analysis
-- Track historic work item revisions
+## Comandos de Ejemplo Mejorados
 
-## Cross-Project Querying
-
-The work item querying functionality supports three different scopes:
-
-1. **Organization-wide**: Query ALL projects in your organization
-2. **Multi-project**: Query specific projects by name
-3. **Single project**: Query one specific project by ID
-
-This makes it perfect for:
-- **Organization-wide analytics**: Get insights across all your projects
-- **Team productivity analysis**: Track specific teams across multiple projects
-- **Resource allocation**: See where developers are spending time across projects
-- **Cross-project reporting**: Generate comprehensive reports for management
-
-## Architecture
-
-The work item querying functionality is implemented in `WorkItemOperations.py` and follows the same patterns as the existing codebase:
-
-- **WorkItemOperations class**: Extends `AzureDevOps` base class
-- **Dynamic WIQL Query Builder**: Constructs queries based on parameters
-- **KPI Calculation Engine**: Analyzes time efficiency and productivity metrics
-- **CSV Export**: Structured data export for reporting
-
-## API Endpoints Used
-
-1. **WIQL Query**: `POST /_apis/wit/wiql?api-version=7.0`
-2. **Work Item Details**: `GET /_apis/wit/workitems?ids={ids}&api-version=7.1`
-3. **Work Item Revisions**: `GET /_apis/wit/workitems/{id}/revisions?api-version=7.1`
-
-## Command Reference
-
-### Basic Usage
-
+### Para Análisis Completo (Work Items Cerrados + Activos)
 ```bash
-# Query all closed work items across ALL projects
-python main.py --query-work-items
-
-# Query specific project by ID
-python main.py --query-work-items --project-id <project_id>
-
-# Query specific projects by name
-python main.py --query-work-items --project-names "ProjectA,ProjectB"
-```
-
-### Cross-Project Querying
-
-```bash
-# Query all projects for specific developers
-python main.py --query-work-items --assigned-to "Carlos Vazquez,Alex Valenzuela"
-
-# Query specific projects with filters
-python main.py --query-work-items --project-names "ProjectA,ProjectB" --work-item-types "Task,User Story,Bug" --states "Closed,Done,Resolved"
-
-# Organization-wide date range filtering
-python main.py --query-work-items --start-date "2025-06-01" --end-date "2025-07-09"
-
-# Cross-project export
-python main.py --query-work-items --export-csv "organization_metrics.csv" --assigned-to "Carlos Vazquez"
-```
-
-### Single Project Filtering
-
-```bash
-# Query by specific developers in one project
-python main.py --query-work-items --project-id <project_id> --assigned-to "Carlos Vazquez,Alex Valenzuela"
-
-# Query specific work item types and states in one project
-python main.py --query-work-items --project-id <project_id> --work-item-types "Task,User Story,Bug" --states "Closed,Done,Resolved"
-
-# Use different date fields
-python main.py --query-work-items --project-id <project_id> --date-field "StartDate" --start-date "2025-06-01"
-
-# Area and iteration path filtering
-python main.py --query-work-items --project-id <project_id> --area-path "MyProject\\Development" --iteration-path "Sprint 1"
-```
-
-### Performance & Export Options
-
-```bash
-# Skip efficiency calculations for faster results (cross-project)
-python main.py --query-work-items --no-efficiency --project-names "ProjectA,ProjectB"
-
-# Export results to CSV (single project)
-python main.py --query-work-items --project-id <project_id> --export-csv "work_items_report.csv"
-
-# Organization-wide export
-python main.py --query-work-items --export-csv "organization_analysis.csv" --start-date "2025-06-01"
-```
-
-### Complete Examples
-
-```bash
-# Organization-wide comprehensive query
 python main.py --query-work-items \
-  --assigned-to "Carlos Vazquez,Alex Valenzuela" \
+  --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alex Valenzuela,Gerardo Melgoza,Hanz Izarraraz,Osvaldo de Luna,Uriel Cortes,Emmanuel Pérez,Fernando Alcaraz,Damian Gaspar,Cristian Soria,Eduardo Félix,Daniel Cayola,Karina González,Ximena Segura" \
+  --work-item-types "Task,User Story,Bug" \
+  --states "Closed,Done,Active,New,In Progress" \
+  --start-date "2025-06-01" \
+  --end-date "2025-07-01" \
+  --productive-states "Active,In Progress,Code Review,Testing" \
+  --export-csv "organization_sprint_analysis_complete.csv"
+```
+
+### Solo Work Items Cerrados (Análisis Original)
+```bash
+python main.py --query-work-items \
+  --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alex Valenzuela" \
   --work-item-types "Task,User Story,Bug" \
   --states "Closed,Done" \
   --start-date "2025-06-01" \
-  --end-date "2025-07-09" \
-  --date-field "ClosedDate" \
-  --export-csv "organization_sprint_analysis.csv"
-
-# Specific projects query
-python main.py --query-work-items \
-  --project-names "ProjectA,ProjectB" \
-  --assigned-to "Carlos Vazquez,Alex Valenzuela" \
-  --work-item-types "Task,User Story,Bug" \
-  --states "Closed,Done" \
-  --start-date "2025-06-01" \
-  --end-date "2025-07-09" \
-  --export-csv "multi_project_analysis.csv"
-
-# Single project with area/iteration filters
-python main.py --query-work-items \
-  --project-id <project_id> \
-  --assigned-to "Carlos Vazquez,Alex Valenzuela" \
-  --work-item-types "Task,User Story,Bug" \
-  --states "Closed,Done" \
-  --start-date "2025-06-01" \
-  --end-date "2025-07-09" \
-  --date-field "ClosedDate" \
-  --area-path "MyProject\\Development" \
-  --export-csv "sprint_analysis.csv"
+  --end-date "2025-07-01" \
+  --productive-states "Active,In Progress" \
+  --export-csv "organization_sprint_analysis_closed.csv"
 ```
 
-## KPI Metrics Calculated
+## Métricas y Cálculos Principales
 
-### Individual Work Item Metrics
-- **Active Time**: Time spent in productive states
-- **Blocked Time**: Time spent in blocked/waiting states
-- **Efficiency Percentage**: (Active Time / Total Time) × 100
-- **State Breakdown**: Time spent in each state
+### Métricas por Desarrollador
+Basándose en el análisis de datos reales del equipo:
 
-### Project-Level KPIs
-- **On-time Delivery Percentage**: Work items completed by target date
-- **Average Efficiency**: Mean efficiency across all work items
-- **Total Active/Blocked Hours**: Aggregate time metrics
-- **Bottleneck Analysis**: States with highest average time
+**1. Tasa de Finalización (Completion Rate %)**
+- % de work items completados vs. asignados
+- Ejemplo: Carlos Vazquez = 100% (71/71 items completados)
 
-### Productive vs Blocked States
+**2. Entrega a Tiempo (On-Time Delivery %)**
+- % de items entregados antes/en la fecha objetivo
+- Ejemplo: Diego Lopez = 55.81% (el mejor del equipo)
 
-**Default Productive States:**
-- Active
-- In Progress
-- Code Review
-- Testing
+**3. Eficiencia Promedio (Average Fair Efficiency)**
+- Tiempo productivo vs. tiempo total en estados activos
+- Ejemplo: Diego Lopez = 62.95% (el más eficiente)
 
-**Default Blocked States:**
-- Blocked
-- Waiting
-- On Hold
+**4. Puntuación de Entrega (Average Delivery Score)**
+- Calificación ponderada basada en días de adelanto/retraso
+- Ejemplo: Damian Gaspar = 93.02 (mejor puntuación)
 
-## Output Example
+**5. Puntuación Global del Desarrollador (Overall Developer Score)**
+- Combinación de eficiencia y entrega a tiempo
+- Fórmula: (Efficiency × 0.4) + (Delivery Score × 0.6)
+- Ejemplo: Diego Lopez = 78.25 (mejor puntuación general)
 
-```
-================================================================================
-WORK ITEMS QUERY RESULTS
-================================================================================
-Total items found: 25
-Assigned to: Carlos Vazquez, Alex Valenzuela
-Work item types: Task, User Story, Bug
-States: Closed, Done
-Date range: 2025-06-01 to 2025-07-09
+## Parámetros del Comando
 
-KPI SUMMARY:
-  On-time delivery: 72.0%
-  Average efficiency: 68.5%
-  Total active hours: 340.5
-  Total blocked hours: 89.2
-
-TOP BOTTLENECKS:
-  1. Code Review: 12.5h avg (8 occurrences)
-  2. Waiting: 8.3h avg (5 occurrences)
-  3. Blocked: 6.7h avg (3 occurrences)
-
-WORK ITEMS SUMMARY:
-  ID 1234: Implement user authentication system...
-    Assigned: Carlos Vazquez | State: Done
-    Efficiency: 75.2% | Active: 28.5h
-
-  ID 1235: Fix login validation bug...
-    Assigned: Alex Valenzuela | State: Closed
-    Efficiency: 82.1% | Active: 15.3h
-...
-================================================================================
+### Filtros Básicos
+```bash
+--assigned-to "Desarrollador1,Desarrollador2"    # Lista de desarrolladores separados por coma
+--work-item-types "Task,User Story,Bug"          # Tipos de work items
+--states "Closed,Done"                           # Estados finales
+--start-date "2025-06-01"                        # Fecha de inicio (YYYY-MM-DD)
+--end-date "2025-07-01"                          # Fecha de fin (YYYY-MM-DD)
 ```
 
-## CSV Export Format
+### Estados Productivos vs. Bloqueados
+```bash
+--productive-states "Active,In Progress,Code Review"  # Estados considerados productivos
+--blocked-states "Blocked,Waiting,On Hold"           # Estados considerados bloqueados
+```
 
-The exported CSV includes the following columns:
+### Exportación
+```bash
+--export-csv "nombre_archivo.csv"                    # Exportar resultados a CSV
+```
 
-- **ID**: Work item ID
-- **Title**: Work item title
-- **Project Name**: Name of the project (useful for cross-project queries)
-- **Assigned To**: Current assignee
-- **State**: Current state
-- **Work Item Type**: Task, User Story, Bug, etc.
-- **Created Date**: When the work item was created
-- **Closed Date**: When the work item was closed
-- **Target Date**: Planned completion date
-- **Active Time (Hours)**: Time in productive states
-- **Blocked Time (Hours)**: Time in blocked states
-- **Efficiency %**: Calculated efficiency percentage
+## Explicación de Columnas del CSV
 
-## Integration with Existing CLI
+### Archivo: `*_developer_summary.csv`
 
-The work item querying functionality seamlessly integrates with the existing CLI structure:
+**Developer**: Nombre del desarrollador asignado
 
-1. **Follows existing patterns**: Uses same base classes and error handling
-2. **Consistent configuration**: Uses existing config.py for API versions
-3. **Unified help system**: Integrated into --help and --explain commands
-4. **Same authentication**: Uses existing PAT and organization settings
+**Total Work Items**: Número total de work items procesados por el desarrollador
 
-## Error Handling
+**Completed Items**: Work items en estado "Closed", "Done" o "Resolved"
 
-The implementation includes comprehensive error handling:
+**Completion Rate %**: 
+```
+(Completed Items / Total Work Items) × 100
+```
 
-- **API Errors**: Handled by base `AzureDevOps` class
-- **Invalid Dates**: Gracefully skipped with warnings
-- **Missing Data**: Default values and safe fallbacks
-- **CSV Export Errors**: Detailed error messages
+**On-Time Delivery %**: 
+```
+(Items entregados a tiempo o antes / Items completados) × 100
+```
 
-## Performance Considerations
+**Average Fair Efficiency**: 
+```
+Promedio de: (Tiempo en Estados Productivos / Tiempo Total Activo) × 100
+```
+- Solo considera work items con historial de cambios de estado
+- Estados productivos por defecto: "Active", "In Progress", "Code Review", "Testing"
 
-- **Efficiency Calculations**: Can be skipped with `--no-efficiency` for faster results
-- **Batch API Calls**: Work item details fetched in batches
-- **Memory Management**: Streaming CSV export for large datasets
-- **API Rate Limits**: Uses existing request handling with proper error management
+**Average Delivery Score**: Puntuación promedio basada en días de adelanto/retraso
+- Entregas tempranas: +20 puntos por día
+- A tiempo: 100 puntos base  
+- 1-3 días tarde: -5 puntos por día
+- 4-7 días tarde: -10 puntos por día
+- 8-14 días tarde: -15 puntos por día
+- 15+ días tarde: -25 puntos por día
 
-## Best Practices
+**Overall Developer Score**: 
+```
+(Average Efficiency × 0.4) + (Average Delivery Score × 0.6)
+```
 
-1. **Use date ranges**: Always specify reasonable date ranges to avoid large datasets
-2. **Filter appropriately**: Use specific filters (assigned-to, states) to narrow results
-3. **Skip efficiency when not needed**: Use `--no-efficiency` for quick queries
-4. **Export large datasets**: Use CSV export for analysis in Excel/other tools
-5. **Monitor API usage**: Be mindful of Azure DevOps API rate limits
+**Total Active Hours**: Suma de horas en estados productivos
+- Solo días laborables (lunes-viernes)
+- Máximo 10 horas por día
+- Basado en historial real de cambios de estado
 
-## Troubleshooting
+**Total Estimated Hours**: Suma de horas estimadas por work item
+```
+Si hay StartDate y TargetDate:
+  días = (TargetDate - StartDate)
+  días_laborables = días × (5/7)
+  horas = días_laborables × 8
+  mínimo = 4 horas
 
-**Common Issues:**
+Si no hay fechas (fallback por tipo):
+  User Story = 16 horas
+  Task = 8 horas  
+  Bug = 4 horas
+  Otros = 8 horas
+```
 
-1. **No results returned**: Check if filters are too restrictive
-2. **Performance slow**: Use `--no-efficiency` or narrow date ranges
-3. **Authentication errors**: Verify PAT has work item read permissions
-4. **Date parsing errors**: Ensure dates are in YYYY-MM-DD format
+**Avg Days Ahead/Behind**: Promedio de días de adelanto (negativo) o retraso (positivo)
 
-**Required Permissions:**
-- Work Items: Read
-- Projects: Read
-- Analytics: Read (for revision history)
+**Reopened Items Handled**: Work items que fueron reabiertos y reasignados
 
-## Future Enhancements
+**Reopened Rate %**: 
+```
+(Reopened Items / Total Work Items) × 100
+```
 
-Potential areas for future development:
+**Work Item Types**: Número de tipos diferentes de work items manejados
 
-1. **Custom productive states**: Allow configuration of what states are considered productive
-2. **Team-level metrics**: Aggregate KPIs by team or area path
-3. **Historical trending**: Compare KPIs across different time periods
-4. **Burndown charts**: Generate sprint/iteration burndown data
-5. **Integration with Power BI**: Direct export to Power BI datasets
+**Projects Count**: Número de proyectos en los que trabajó el desarrollador
+
+**Early Deliveries**: Items entregados antes de la fecha objetivo
+
+**On-Time Deliveries**: Items entregados exactamente en la fecha objetivo
+
+**Late 1-3 Days**: Items con 1-3 días de retraso
+
+**Late 4-7 Days**: Items con 4-7 días de retraso  
+
+**Late 8-14 Days**: Items con 8-14 días de retraso
+
+**Late 15+ Days**: Items con 15 o más días de retraso
+
+## Fórmulas de Cálculo Principales
+
+### Para Completion Rate Realista
+Incluir work items activos con target date:
+```bash
+--states "Closed,Done,Active,New,In Progress"
+```
+- Work items cerrados: filtrados por `ClosedDate`
+- Work items activos: filtrados por `TargetDate` ≤ fecha fin
+
+### Para Horas Activas Reales (~160h mensuales)
+Expandir estados productivos:
+```bash
+--productive-states "Active,In Progress,Code Review,Testing,To Do,New"
+```
+
+## Análisis de Resultados del Equipo
+
+### Top Performers (basado en datos reales):
+1. **Diego Lopez**: 78.25 - Excelente balance de eficiencia (62.95%) y entrega a tiempo (55.81%)
+2. **Carlos Vazquez**: 69.38 - Buena eficiencia (50.81%) con entrega moderada (36.62%)
+3. **Ximena Segura**: 62.75 - Alta eficiencia (43.49%) en menor volumen
+
+### Áreas de Mejora Identificadas:
+- **Luis Nocedal**: 0% entrega a tiempo - necesita mejora en estimación/planificación
+- **Emmanuel Pérez**: 0% entrega a tiempo - requiere revisión de procesos
+- **Osvaldo De Luna**: Solo 8.33% entrega a tiempo con alta carga de trabajo
+
+## Personalización y Ajustes
+
+### Modificar Estados Productivos
+Para cambiar qué estados se consideran productivos, editar en `WorkItemOperations.py:line_number`:
+```python
+DEFAULT_PRODUCTIVE_STATES = ['Active', 'In Progress', 'Code Review', 'Testing']
+```
+
+### Ajustar Ponderaciones de Puntuación
+Para modificar la fórmula de puntuación global, ubicar en `WorkItemOperations.py:line_number`:
+```python
+# Cambiar pesos: actualmente 40% eficiencia, 60% entrega
+overall_score = (efficiency * 0.4) + (delivery_score * 0.6)
+```
+
+### Modificar Penalizaciones de Retraso
+Para ajustar puntos por días de retraso, editar:
+```python
+delivery_penalties = {
+    'early': 20,      # +20 puntos por día temprano
+    'on_time': 100,   # 100 puntos base
+    'late_1_3': -5,   # -5 puntos por día (1-3 días tarde)
+    'late_4_7': -10,  # -10 puntos por día (4-7 días tarde)
+    'late_8_14': -15, # -15 puntos por día (8-14 días tarde)
+    'late_15_plus': -25 # -25 puntos por día (15+ días tarde)
+}
+```
+
+## Interpretación de Resultados
+
+### Rangos de Puntuación Recomendados:
+- **75-100**: Excelente rendimiento
+- **60-74**: Buen rendimiento
+- **45-59**: Rendimiento promedio
+- **30-44**: Necesita mejora
+- **<30**: Requiere intervención inmediata
+
+### Indicadores Clave para Monitoreo:
+1. **Entrega a Tiempo > 50%**: Objetivo mínimo del equipo
+2. **Eficiencia > 40%**: Límite inferior aceptable
+3. **Puntuación Global > 60**: Meta del equipo
+4. **Tasa de Reapertura < 10%**: Control de calidad
+
+## Comandos Adicionales Útiles
+
+### Análisis por Período Específico
+```bash
+# Sprint actual (ejemplo 2 semanas)
+python main.py --query-work-items --start-date "2025-07-01" --end-date "2025-07-15"
+
+# Análisis mensual
+python main.py --query-work-items --start-date "2025-06-01" --end-date "2025-06-30"
+
+# Análisis trimestral
+python main.py --query-work-items --start-date "2025-04-01" --end-date "2025-06-30"
+```
+
+### Filtros por Tipo de Work Item
+```bash
+# Solo bugs
+python main.py --query-work-items --work-item-types "Bug" --states "Closed,Done"
+
+# Solo features/historias de usuario
+python main.py --query-work-items --work-item-types "User Story,Feature" --states "Closed,Done"
+```
+
+### Análisis de Desarrollador Individual
+```bash
+# Análisis detallado de un desarrollador
+python main.py --query-work-items --assigned-to "Diego Lopez" --export-csv "diego_analysis.csv"
+```
