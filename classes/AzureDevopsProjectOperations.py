@@ -1,5 +1,5 @@
 import requests
-from AzureDevOps import AzureDevOps
+from classes.AzureDevOps import AzureDevOps
 
 
 class AzureDevOpsProjectOperations(AzureDevOps):

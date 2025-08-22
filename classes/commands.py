@@ -1,5 +1,5 @@
-from AzureDevOps import AzureDevOps
-from config import Config
+from classes.AzureDevOps import AzureDevOps
+from config.config import Config
 import json
 import re
 import csv

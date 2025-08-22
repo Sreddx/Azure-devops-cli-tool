@@ -1,11 +1,12 @@
-from AzureDevOps import AzureDevOps
+from classes.AzureDevOps import AzureDevOps
+from classes.efficiency_calculator import EfficiencyCalculator
+from classes.project_discovery import ProjectDiscovery
+from config.config_loader import ConfigLoader
 from datetime import datetime, timedelta
 import json
 from typing import List, Dict, Optional, Any
 import csv
-from azure.devops.connection import Connection
-from msrest.authentication import BasicAuthentication
-from azure.devops.v7_1.work_item_tracking.models import Wiql
+import os
 from urllib.parse import quote
 
 
@@ -14,106 +15,41 @@ class WorkItemOperations(AzureDevOps):
     A class for handling work item querying and KPI calculations.
     """
     
-    def __init__(self, organization=None, personal_access_token=None):
+    def __init__(self, organization=None, personal_access_token=None, scoring_config=None, config_file=None):
         super().__init__(organization, personal_access_token)
         
-        # Initialize Azure DevOps SDK connection
-        self.connection = None
-        self.wit_client = None
-        self._initialize_sdk_connection()
+        # Initialize configuration loader
+        self.config_loader = ConfigLoader(config_file or "azure_devops_config.json")
+        
+        # Merge scoring config with loaded config
+        if scoring_config:
+            efficiency_config = self.config_loader.get_efficiency_scoring_config()
+            efficiency_config.update(scoring_config)
+            developer_config = self.config_loader.get_developer_scoring_config()
+            if 'developer_score_weights' in scoring_config:
+                developer_config['weights'].update(scoring_config['developer_score_weights'])
+        
+        # Initialize helper modules
+        combined_config = {
+            **self.config_loader.get_efficiency_scoring_config(),
+            **self.config_loader.get_developer_scoring_config(),
+            **self.config_loader.get_business_hours_config()
+        }
+        self.efficiency_calculator = EfficiencyCalculator(combined_config)
+        self.project_discovery = ProjectDiscovery(self)
+        
+        # Project caching
+        self.projects_cache_file = "projects_cache.json"
     
-    def _initialize_sdk_connection(self):
-        """Initialize Azure DevOps SDK connection."""
-        try:
-            organization_url = f"https://dev.azure.com/{self.organization}"
-            credentials = BasicAuthentication('', self.pat)
-            self.connection = Connection(base_url=organization_url, creds=credentials)
-            self.wit_client = self.connection.clients.get_work_item_tracking_client()
-            print("SDK connection initialized successfully")
-        except Exception as e:
-            print(f"Failed to initialize SDK connection: {e}")
-            print("Will fallback to REST API calls")
     
     def get_all_projects(self) -> List[Dict]:
-        """
-        Get all projects in the organization.
-        
-        Returns:
-            List of project dictionaries with id, name, and description
-        """
-        print("Fetching all projects in the organization...")
-        endpoint = f"_apis/projects?api-version={self.get_api_version('projects')}"
-        response = self.handle_request("GET", endpoint)
-        projects = response.get('value', [])
-        
-        simplified_projects = []
-        for project in projects:
-            simplified_projects.append({
-                'id': project['id'],
-                'name': project['name'],
-                'description': project.get('description', ''),
-                'url': project.get('url', '')
-            })
-        
-        print(f"Found {len(simplified_projects)} projects")
-        return simplified_projects
+        """Delegate to project discovery module."""
+        return self.project_discovery.get_all_projects()
     
     def filter_projects_by_name(self, projects: List[Dict], project_names: List[str]) -> List[Dict]:
-        """
-        Filter projects by name.
-        
-        Args:
-            projects: List of all projects
-            project_names: List of project names to filter by
-            
-        Returns:
-            Filtered list of projects
-        """
-        if not project_names:
-            return projects
-        
-        filtered = []
-        for project in projects:
-            if project['name'] in project_names:
-                filtered.append(project)
-        
-        if not filtered:
-            print(f"Warning: No projects found matching names: {project_names}")
-        else:
-            print(f"Filtered to {len(filtered)} projects: {[p['name'] for p in filtered]}")
-        
-        return filtered
+        """Delegate to project discovery module."""
+        return self.project_discovery.filter_projects_by_name(projects, project_names)
     
-    def find_projects_with_user_activity_sdk(self,
-                                           assigned_to: List[str], 
-                                           work_item_types: Optional[List[str]] = None,
-                                           states: Optional[List[str]] = None,
-                                           start_date: Optional[str] = None,
-                                           end_date: Optional[str] = None,
-                                           date_field: str = "ClosedDate",
-                                           max_projects: int = 50) -> List[Dict]:
-        """
-        Find projects with user activity using Azure DevOps SDK.
-        Much more efficient than WIQL queries.
-        
-        Args:
-            assigned_to: List of users to look for
-            work_item_types: Work item types to filter by
-            states: States to filter by  
-            start_date: Start date for filtering
-            end_date: End date for filtering
-            date_field: Field to use for date filtering
-            max_projects: Maximum number of projects to check
-            
-        Returns:
-            List of projects with user activity
-        """
-        # For now, use the REST API approach which is working well
-        # The SDK approach had parameter issues, so we fall back to REST API
-        print("Using REST API approach for project discovery")
-        return self.find_projects_with_user_activity(
-            assigned_to, work_item_types, states, start_date, end_date, date_field, max_projects
-        )
     
     def find_projects_with_user_activity(self, 
                                         assigned_to: List[str], 
@@ -122,175 +58,17 @@ class WorkItemOperations(AzureDevOps):
                                         start_date: Optional[str] = None,
                                         end_date: Optional[str] = None,
                                         date_field: str = "ClosedDate",
-                                        max_projects: int = 50) -> List[Dict]:
-        """
-        Find projects that have work item activity for specific users.
-        Uses a completely different approach that doesn't fetch all projects.
-        
-        Args:
-            assigned_to: List of users to look for
-            work_item_types: Work item types to filter by
-            states: States to filter by
-            start_date: Start date for filtering
-            end_date: End date for filtering
-            date_field: Field to use for date filtering
-            max_projects: Maximum number of projects to check
-            
-        Returns:
-            List of projects with user activity
-        """
-        print(f"Finding projects with activity for users: {', '.join(assigned_to)}")
-        
-        if not assigned_to:
-            print("No users specified for filtering")
-            return []
-        
-        # Build query conditions
-        conditions = []
-        
-        # Users filter - this is our primary filter
-        assigned_str = "', '".join(assigned_to)
-        conditions.append(f"[System.AssignedTo] IN ('{assigned_str}')")
-        
-        # Work item types filter
-        if work_item_types:
-            types_str = "', '".join(work_item_types)
-            conditions.append(f"[System.WorkItemType] IN ('{types_str}')")
-        
-        # States filter
-        if states:
-            states_str = "', '".join(states)
-            conditions.append(f"[System.State] IN ('{states_str}')")
-        
-        # Date range filter
-        field_mapping = {
-            "ClosedDate": "Microsoft.VSTS.Common.ClosedDate",
-            "StartDate": "Microsoft.VSTS.Scheduling.StartDate", 
-            "TargetDate": "Microsoft.VSTS.Scheduling.TargetDate",
-            "CreatedDate": "System.CreatedDate",
-            "ChangedDate": "System.ChangedDate"
-        }
-        
-        wiql_date_field = field_mapping.get(date_field, date_field)
-        
-        if start_date:
-            conditions.append(f"[{wiql_date_field}] >= '{start_date}'")
-        if end_date:
-            conditions.append(f"[{wiql_date_field}] <= '{end_date}'")
-        
-        if not conditions:
-            print("No valid query conditions built")
-            return []
-        
-        # NEW STRATEGY: Instead of fetching all projects, use a more targeted approach
-        # This approach queries a limited set of projects that are most likely to have user activity
-        
-        print(f"Using efficient project discovery (checking up to {max_projects} projects)...")
-        
-        # COMPLETELY NEW APPROACH: Don't fetch all projects!
-        # Instead, let's use a targeted discovery method
-        
-        found_projects = []
-        
-        # Strategy 1: Try to use project names from common patterns or heuristics
-        # This is much more efficient than fetching all projects
-        
-        print("Using smart project discovery...")
-        
-        # First, try to query a few well-known or recently active projects
-        # Get minimal project info without fetching all
-        project_endpoint = f"_apis/projects?$top={max_projects}&api-version={self.get_api_version('projects')}"
-        
-        try:
-            print(f"Fetching first {max_projects} projects only...")
-            response = self.handle_request("GET", project_endpoint)
-            limited_projects = response.get('value', [])
-            
-            print(f"Got {len(limited_projects)} projects to check")
-            
-            # Process in smaller batches
-            batch_size = 10
-            for batch_start in range(0, len(limited_projects), batch_size):
-                batch_end = min(batch_start + batch_size, len(limited_projects))
-                batch_projects = limited_projects[batch_start:batch_end]
-                
-                print(f"  Processing projects {batch_start + 1}-{batch_end} of {len(limited_projects)}...")
-                
-                for project in batch_projects:
-                    try:
-                        # Quick existence check with minimal query
-                        # Debug: Print the conditions to see what's wrong
-                        print(f"    Testing conditions: {conditions}")
-                        
-                        if not conditions:
-                            print(f"    ✗ {project['name']} - No conditions to test")
-                            continue
-                        
-                        test_query = f"""SELECT [System.Id]
-                                       FROM WorkItems 
-                                       WHERE {' AND '.join(conditions)}"""
-                        
-                        print(f"    Query: {test_query}")
-                        
-                        endpoint = f"{project['id']}/_apis/wit/wiql?api-version={self.get_api_version('wiql')}"
-                        data = {"query": test_query}
-                        response = self.handle_request("POST", endpoint, data)
-                        work_items = response.get("workItems", [])
-                        
-                        if work_items:
-                            # Convert to our expected format
-                            project_info = {
-                                'id': project['id'],
-                                'name': project['name'],
-                                'description': project.get('description', ''),
-                                'url': project.get('url', '')
-                            }
-                            found_projects.append(project_info)
-                            print(f"    ✓ {project['name']} - Found user activity")
-                        else:
-                            print(f"    - {project['name']} - No matching work items")
-                        
-                    except Exception as e:
-                        # Skip projects that error out (likely permission issues)
-                        print(f"    ✗ {project['name']} - Skipped: {str(e)[:50]}...")
-                        continue
-        
-        except Exception as e:
-            print(f"Error in project discovery: {e}")
-            # Fallback to getting all projects if the targeted approach fails
-            print("Falling back to full project list...")
-            all_projects = self.get_all_projects()
-            target_projects = all_projects[:max_projects]
-            
-            for project in target_projects:
-                try:
-                    test_query = f"""SELECT [System.Id]
-                                   FROM WorkItems 
-                                   WHERE {' AND '.join(conditions)}"""
-                    
-                    endpoint = f"{project['id']}/_apis/wit/wiql?api-version={self.get_api_version('wiql')}"
-                    data = {"query": test_query}
-                    response = self.handle_request("POST", endpoint, data)
-                    work_items = response.get("workItems", [])
-                    
-                    if work_items:
-                        found_projects.append(project)
-                        print(f"    ✓ {project['name']} - Found user activity")
-                    
-                except Exception as e:
-                    continue
-        
-        if found_projects:
-            project_names = [p['name'] for p in found_projects]
-            print(f"Found {len(found_projects)} projects with user activity: {', '.join(project_names)}")
-        else:
-            print("No projects found with the specified user activity")
-            print("This might mean:")
-            print("  - The users don't have work items in the specified date range")
-            print("  - The users' work items are in projects not yet checked")
-            print("  - Try increasing --max-projects to check more projects")
-        
-        return found_projects
+                                        max_projects: int = None) -> List[Dict]:
+        """Delegate to project discovery module."""
+        return self.project_discovery.find_projects_with_user_activity(
+            assigned_to, work_item_types, states, start_date, end_date, date_field, max_projects
+        )
+    
+    
+    def get_all_projects_cached(self, refresh_cache: bool = False) -> List[Dict]:
+        """Delegate to project discovery module."""
+        return self.project_discovery.get_all_projects_cached(refresh_cache)
+    
         
     def build_wiql_query(self, 
                         assigned_to: Optional[List[str]] = None,
@@ -340,24 +118,48 @@ class WorkItemOperations(AzureDevOps):
             states_str = "', '".join(states)
             conditions.append(f"[System.State] IN ('{states_str}')")
         
-        # Smart date filtering for mixed states (closed + active items)
+        # Enhanced date filtering logic to handle different scenarios properly
         if start_date or end_date:
             date_conditions = []
             
-            # For closed items: use closed date
-            closed_states = ['Closed', 'Done', 'Resolved']
+            # For closed items: use closed date when available
+            closed_states = ['Closed', 'Done']
             if any(state in closed_states for state in (states or [])):
                 closed_condition_parts = []
                 closed_states_str = "', '".join(closed_states)
                 closed_condition_parts.append(f"[System.State] IN ('{closed_states_str}')")
                 
-                if start_date:
-                    closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] >= '{start_date}'")
-                if end_date:
-                    closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] <= '{end_date}'")
+                if date_field == "TargetDate":
+                    # For target date queries, use target date even for closed items
+                    if start_date:
+                        closed_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'")
+                    if end_date:
+                        closed_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'")
+                else:
+                    # For closed date queries, use closed date
+                    if start_date:
+                        closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] >= '{start_date}'")
+                    if end_date:
+                        closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] <= '{end_date}'")
                 
                 if len(closed_condition_parts) > 1:
                     date_conditions.append(f"({' AND '.join(closed_condition_parts)})")
+            
+            # For resolved items: use target date (no resolved date field available)
+            resolved_states = ['Resolved']
+            if any(state in resolved_states for state in (states or [])):
+                resolved_condition_parts = []
+                resolved_states_str = "', '".join(resolved_states)
+                resolved_condition_parts.append(f"[System.State] IN ('{resolved_states_str}')")
+                
+                # Always use target date for resolved items since there's no resolved date field
+                if start_date:
+                    resolved_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'")
+                if end_date:
+                    resolved_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'")
+                
+                if len(resolved_condition_parts) > 1:
+                    date_conditions.append(f"({' AND '.join(resolved_condition_parts)})")
             
             # For active/new items: use target date within timeframe
             active_states = ['Active', 'New', 'To Do', 'In Progress']
@@ -380,21 +182,9 @@ class WorkItemOperations(AzureDevOps):
                 conditions = [c for c in conditions if not c.startswith('[System.State]')]
                 conditions.append(f"({' OR '.join(date_conditions)})")
         else:
-            # Fallback to original logic if no date filtering
-            field_mapping = {
-                "ClosedDate": "Microsoft.VSTS.Common.ClosedDate",
-                "StartDate": "Microsoft.VSTS.Scheduling.StartDate", 
-                "TargetDate": "Microsoft.VSTS.Scheduling.TargetDate",
-                "CreatedDate": "System.CreatedDate",
-                "ChangedDate": "System.ChangedDate"
-            }
-            
-            wiql_date_field = field_mapping.get(date_field, date_field)
-            
-            if start_date:
-                conditions.append(f"[{wiql_date_field}] >= '{start_date}'")
-            if end_date:
-                conditions.append(f"[{wiql_date_field}] <= '{end_date}'")
+            # No date filtering - don't add any date conditions
+            # The states filter (if any) will be applied normally
+            pass
         
         # Additional filters
         if additional_filters:
@@ -416,7 +206,7 @@ class WorkItemOperations(AzureDevOps):
     
     def execute_wiql_query(self, project_id: str, query: str) -> List[int]:
         """
-        Execute a WIQL query and return work item IDs.
+        Execute a WIQL query and return work item IDs with pagination support.
         
         Args:
             project_id: Project ID to query
@@ -425,17 +215,52 @@ class WorkItemOperations(AzureDevOps):
         Returns:
             List of work item IDs
         """
-        print(f"Executing WIQL query for project: {project_id}")
-        endpoint = f"{project_id}/_apis/wit/wiql?api-version={self.get_api_version('wiql')}"
+        print(f"Executing WIQL query with pagination for project: {project_id}")
+        base_endpoint = f"{project_id}/_apis/wit/wiql?api-version={self.get_api_version('wiql')}"
         
-        data = {"query": query}
-        response = self.handle_request("POST", endpoint, data)
+        # Collect all work items using pagination
+        all_work_item_ids = []
+        continuation_token = None
+        page_count = 0
         
-        work_items = response.get("workItems", [])
-        work_item_ids = [wi["id"] for wi in work_items]
+        while True:
+            page_count += 1
+            
+            # Build endpoint with continuation token if available
+            if continuation_token:
+                endpoint = f"{base_endpoint}&continuationToken={continuation_token}"
+                print(f"  Fetching page {page_count} with continuation token...")
+            else:
+                endpoint = base_endpoint
+                print(f"  Fetching page {page_count}...")
+            
+            # Execute WIQL query
+            data = {"query": query}
+            response = self.handle_request("POST", endpoint, data)
+            
+            # Extract work items and continuation token
+            page_work_items = response.get("workItems", [])
+            continuation_token = response.get("continuationToken")
+            
+            if page_work_items:
+                page_ids = [wi["id"] for wi in page_work_items]
+                all_work_item_ids.extend(page_ids)
+                print(f"    Found {len(page_ids)} work items on page {page_count}")
+            else:
+                print(f"    No work items found on page {page_count}")
+            
+            # Break if no continuation token (last page)
+            if not continuation_token:
+                print(f"  Pagination complete after {page_count} pages")
+                break
+                
+            # Safety check to prevent infinite loops
+            if page_count > 100:
+                print(f"  WARNING: Stopping after {page_count} pages to prevent infinite loop")
+                break
         
-        print(f"Found {len(work_item_ids)} work items")
-        return work_item_ids
+        print(f"Total work items found across all pages: {len(all_work_item_ids)}")
+        return all_work_item_ids
     
     def _get_project_url_segment(self, project_id, project_name):
         """
@@ -450,13 +275,13 @@ class WorkItemOperations(AzureDevOps):
 
     def get_work_item_details(self, project_id: str, work_item_ids: List[int], project_name: str = None) -> List[Dict]:
         """
-        Get detailed information for work items.
+        Get detailed information for work items with enhanced field extraction.
         Args:
             project_id: Project ID
             work_item_ids: List of work item IDs
             project_name: Project name (optional, for fallback)
         Returns:
-            List of work item details
+            List of work item details with original estimate and enhanced fields
         """
         if not work_item_ids:
             return []
@@ -466,7 +291,7 @@ class WorkItemOperations(AzureDevOps):
         endpoint = f"{project_segment}/_apis/wit/workitems?ids={ids_str}&api-version={self.get_api_version('work_items')}"
         response = self.handle_request("GET", endpoint)
         work_items = response.get("value", [])
-        # Transform to simpler format
+        # Transform to simpler format with enhanced field extraction
         simplified_items = []
         for wi in work_items:
             fields = wi.get("fields", {})
@@ -481,8 +306,19 @@ class WorkItemOperations(AzureDevOps):
                 "start_date": fields.get("Microsoft.VSTS.Scheduling.StartDate", ""),
                 "target_date": fields.get("Microsoft.VSTS.Scheduling.TargetDate", ""),
                 "closed_date": fields.get("Microsoft.VSTS.Common.ClosedDate", ""),
+                "resolved_date": fields.get("Microsoft.VSTS.Common.ResolvedDate", ""),
                 "area_path": fields.get("System.AreaPath", ""),
-                "iteration_path": fields.get("System.IterationPath", "")
+                "iteration_path": fields.get("System.IterationPath", ""),
+                # Enhanced fields from schema
+                "original_estimate": fields.get("Microsoft.VSTS.Scheduling.OriginalEstimate", 0),
+                "priority": fields.get("Microsoft.VSTS.Common.Priority", 0),
+                "reason": fields.get("System.Reason", ""),
+                "resolved_by": fields.get("Microsoft.VSTS.Common.ResolvedBy", {}).get("displayName", ""),
+                "created_by": fields.get("System.CreatedBy", {}).get("displayName", ""),
+                "changed_by": fields.get("System.ChangedBy", {}).get("displayName", ""),
+                # Custom fields (if available)
+                "custom_fecha_planificada": fields.get("Custom.FechaPlanificada", ""),
+                "custom_tipo_actividad": fields.get("Custom.TipoActividad", "")
             }
             simplified_items.append(simplified_item)
         return simplified_items
@@ -518,325 +354,99 @@ class WorkItemOperations(AzureDevOps):
     def calculate_fair_efficiency_metrics(self, 
                                          work_item: Dict,
                                          state_history: List[Dict], 
-                                         productive_states: Optional[List[str]] = None,
-                                         blocked_states: Optional[List[str]] = None) -> Dict:
-        """
-        Calculate fair efficiency metrics that encourage good development practices.
-        
-        Args:
-            work_item: Work item details with dates and metadata
-            state_history: List of state changes with timestamps
-            productive_states: List of states considered productive (optional)
-            blocked_states: List of states considered blocked (optional)
-        Returns:
-            Dictionary with enhanced efficiency metrics
-        """
-        if len(state_history) < 2:
-            return {
-                "active_time_hours": 0,
-                "blocked_time_hours": 0,
-                "total_time_hours": 0,
-                "estimated_time_hours": 0,
-                "efficiency_percentage": 0,
-                "fair_efficiency_score": 0,
-                "delivery_score": 0,
-                "completion_bonus": 0,
-                "delivery_timing_bonus": 0,
-                "days_ahead_behind": 0,
-                "state_breakdown": {},
-                "was_reopened": False,
-                "active_after_reopen": 0
-            }
-        
-        # Calculate time in different states
-        active_time = timedelta()
-        blocked_time = timedelta()
-        total_time = timedelta()
-        state_breakdown = {}
-        was_reopened = False
-        active_after_reopen = timedelta()
-        
-        # Track if item was reopened (Closed -> Active pattern)
-        for i in range(len(state_history) - 1):
-            current_state = state_history[i]['state']
-            next_state = state_history[i+1]['state']
-            
-            if current_state in ['Closed', 'Done', 'Resolved'] and next_state in (productive_states or ['Active']):
-                was_reopened = True
-            
-            # Calculate time in each state
-            next_change = datetime.fromisoformat(state_history[i+1]['changed_date'].replace('Z', '+00:00'))
-            current_change = datetime.fromisoformat(state_history[i]['changed_date'].replace('Z', '+00:00'))
-            
-            # Calculate business hours only for productive states
-            if productive_states is not None and current_state in productive_states:
-                business_hours_in_state = self._calculate_business_hours(current_change, next_change)
-                active_time += timedelta(hours=business_hours_in_state)
-                
-                # Track active time after reopening for bonus credit
-                if was_reopened and i > 0:
-                    prev_states = [h['state'] for h in state_history[:i]]
-                    if any(state in ['Closed', 'Done', 'Resolved'] for state in prev_states):
-                        active_after_reopen += timedelta(hours=business_hours_in_state)
-            else:
-                # For non-productive states, use regular time calculation
-                time_in_state = next_change - current_change
-                if blocked_states is not None and current_state in blocked_states:
-                    blocked_time += time_in_state
-            
-            # Always calculate total time and state breakdown with regular time
-            time_in_state = next_change - current_change
-            total_time += time_in_state
-            
-            # Track time per state (use business hours for productive states)
-            if current_state not in state_breakdown:
-                state_breakdown[current_state] = timedelta()
-            
-            if productive_states is not None and current_state in productive_states:
-                business_hours_in_state = self._calculate_business_hours(current_change, next_change)
-                state_breakdown[current_state] += timedelta(hours=business_hours_in_state)
-            else:
-                state_breakdown[current_state] += time_in_state
-        
-        # Calculate estimated time from dates
-        estimated_hours = self._calculate_estimated_time(work_item)
-        
-        # Calculate delivery timing
-        delivery_metrics = self._calculate_delivery_timing(work_item)
-        
-        # Convert to hours
-        active_hours = active_time.total_seconds() / 3600
-        blocked_hours = blocked_time.total_seconds() / 3600
-        total_hours = total_time.total_seconds() / 3600
-        active_after_reopen_hours = active_after_reopen.total_seconds() / 3600
-        
-        # Calculate completion bonus (20% of estimated time)
-        is_completed = work_item.get('state', '').lower() in ['closed', 'done', 'resolved']
-        completion_bonus = (estimated_hours * 0.20) if is_completed else 0
-        
-        # Calculate fair efficiency score with bonuses
-        # Base: active time + completion bonus + delivery timing bonus
-        numerator = active_hours + completion_bonus + delivery_metrics['timing_bonus_hours']
-        # Denominator: estimated time + late penalty mitigation (capped)
-        denominator = estimated_hours + delivery_metrics['late_penalty_mitigation']
-        
-        if denominator > 0:
-            fair_efficiency = (numerator / denominator) * 100
-            # Cap at 150% to prevent unrealistic scores
-            fair_efficiency = min(fair_efficiency, 150.0)
-        else:
-            fair_efficiency = 0
-        
-        # Traditional efficiency for comparison
-        traditional_efficiency = (active_hours / total_hours) * 100 if total_hours > 0 else 0
-        
-        # Convert state breakdown to hours
-        state_breakdown_hours = {
-            state: td.total_seconds() / 3600 
-            for state, td in state_breakdown.items()
-        }
-        
-        return {
-            "active_time_hours": round(active_hours, 2),
-            "blocked_time_hours": round(blocked_hours, 2),
-            "total_time_hours": round(total_hours, 2),
-            "estimated_time_hours": round(estimated_hours, 2),
-            "efficiency_percentage": round(traditional_efficiency, 2),  # Keep for comparison
-            "fair_efficiency_score": round(fair_efficiency, 2),
-            "delivery_score": round(delivery_metrics['delivery_score'], 2),
-            "completion_bonus": round(completion_bonus, 2),
-            "delivery_timing_bonus": round(delivery_metrics['timing_bonus_hours'], 2),
-            "days_ahead_behind": delivery_metrics['days_difference'],
-            "state_breakdown": state_breakdown_hours,
-            "was_reopened": was_reopened,
-            "active_after_reopen": round(active_after_reopen_hours, 2)
-        }
+                                         state_config: Optional[Dict] = None) -> Dict:
+        """Delegate to efficiency calculator module with state configuration."""
+        return self.efficiency_calculator.calculate_fair_efficiency_metrics(
+            work_item, state_history, state_config
+        )
     
-    def _calculate_estimated_time(self, work_item: Dict) -> float:
-        """
-        Calculate estimated time for a work item based on start and target dates.
-        
-        Args:
-            work_item: Work item with date fields
-            
-        Returns:
-            Estimated time in hours
-        """
-        start_date = work_item.get('start_date')
-        target_date = work_item.get('target_date')
-        
-        if start_date and target_date:
-            try:
-                start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-                target = datetime.fromisoformat(target_date.replace('Z', '+00:00'))
-                duration = target - start
-                
-                # Convert to working hours (assume 8 hours per day, 5 days per week)
-                days = duration.total_seconds() / 86400
-                working_days = days * (5/7)  # Convert to working days
-                hours = working_days * 8
-                
-                # Minimum 4 hours for any work item
-                return max(hours, 4.0)
-                
-            except (ValueError, TypeError):
-                pass
-        
-        # Fallback: use work item type to estimate
-        work_item_type = work_item.get('work_item_type', '').lower()
-        if 'user story' in work_item_type:
-            return 16.0  # 2 days
-        elif 'task' in work_item_type:
-            return 8.0   # 1 day
-        elif 'bug' in work_item_type:
-            return 4.0   # 0.5 day
-        else:
-            return 8.0   # Default 1 day
     
-    def _calculate_delivery_timing(self, work_item: Dict) -> Dict:
+    
+    
+    def _get_total_assigned_items_by_developer(self, target_projects: List[Dict], 
+                                              assigned_to: List[str], 
+                                              work_item_types: List[str],
+                                              start_date: Optional[str] = None,
+                                              end_date: Optional[str] = None) -> Dict[str, int]:
         """
-        Calculate delivery timing metrics and bonuses/penalties.
+        Get total count of assigned items per developer regardless of state,
+        filtered by start/target dates within the specified timeframe.
         
         Args:
-            work_item: Work item with date fields
+            target_projects: List of projects to query
+            assigned_to: List of developers to count items for
+            work_item_types: List of work item types to include
+            start_date: Start date for filtering (YYYY-MM-DD format)
+            end_date: End date for filtering (YYYY-MM-DD format)
             
         Returns:
-            Dictionary with delivery timing metrics
+            Dictionary mapping developer name to total assigned item count
         """
-        target_date = work_item.get('target_date')
-        closed_date = work_item.get('closed_date')
+        # Build query to count ALL assigned items (no state filter)
+        assigned_counts = {}
         
-        if not target_date or not closed_date:
-            return {
-                'delivery_score': 100.0,
-                'timing_bonus_hours': 0.0,
-                'late_penalty_mitigation': 0.0,
-                'days_difference': 0
-            }
-        
-        try:
-            target = datetime.fromisoformat(target_date.replace('Z', '+00:00'))
-            closed = datetime.fromisoformat(closed_date.replace('Z', '+00:00'))
+        for developer in assigned_to:
+            total_count = 0
             
-            days_difference = (closed - target).total_seconds() / 86400
-            
-            if days_difference <= 0:
-                # Early or on-time delivery
-                if days_difference <= -7:
-                    # Very early (7+ days early)
-                    delivery_score = 130.0
-                    timing_bonus_hours = abs(days_difference) * 1.0
-                elif days_difference <= -3:
-                    # Early (3-7 days early)
-                    delivery_score = 120.0
-                    timing_bonus_hours = abs(days_difference) * 0.5
-                elif days_difference <= -1:
-                    # Slightly early (1-3 days early)
-                    delivery_score = 110.0
-                    timing_bonus_hours = abs(days_difference) * 0.25
-                else:
-                    # On time
-                    delivery_score = 100.0
-                    timing_bonus_hours = 0.0
+            # Query each project for this developer's total assigned items
+            for project in target_projects:
+                try:
+                    # Build query to get assigned items with date filtering
+                    conditions = [
+                        f"[System.AssignedTo] = '{developer}'",
+                        f"[System.WorkItemType] IN ('{"', '".join(work_item_types)}')"
+                    ]
                     
-                late_penalty_mitigation = 0.0
-                
-            else:
-                # Late delivery with graduated penalties
-                timing_bonus_hours = 0.0
-                
-                if days_difference <= 3:
-                    delivery_score = 90.0
-                    late_penalty_mitigation = 2.0  # Small mitigation
-                elif days_difference <= 7:
-                    delivery_score = 80.0
-                    late_penalty_mitigation = 4.0
-                elif days_difference <= 14:
-                    delivery_score = 70.0
-                    late_penalty_mitigation = 6.0
-                else:
-                    delivery_score = 60.0  # Floor at 60%
-                    late_penalty_mitigation = 8.0  # Max mitigation
+                    # Add date filtering for start_date or target_date within timeframe
+                    if start_date and end_date:
+                        date_condition = f"""(
+                            ([Microsoft.VSTS.Scheduling.StartDate] >= '{start_date}' AND [Microsoft.VSTS.Scheduling.StartDate] <= '{end_date}') OR
+                            ([Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}' AND [Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}')
+                        )"""
+                        conditions.append(date_condition)
+                    elif start_date:
+                        date_condition = f"""(
+                            [Microsoft.VSTS.Scheduling.StartDate] >= '{start_date}' OR
+                            [Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'
+                        )"""
+                        conditions.append(date_condition)
+                    elif end_date:
+                        date_condition = f"""(
+                            [Microsoft.VSTS.Scheduling.StartDate] <= '{end_date}' OR
+                            [Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'
+                        )"""
+                        conditions.append(date_condition)
+                    
+                    count_query = f"SELECT [System.Id] FROM WorkItems WHERE {' AND '.join(conditions)}"
+                    
+                    endpoint = f"{project['id']}/_apis/wit/wiql?api-version=7.0"
+                    response = self.handle_request(
+                        "POST",
+                        endpoint,
+                        data={"query": count_query}
+                    )
+                    
+                    if response and 'workItemRelations' in response:
+                        total_count += len(response['workItemRelations'])
+                    elif response and 'workItems' in response:
+                        total_count += len(response['workItems'])
+                        
+                except Exception as e:
+                    print(f"Warning: Failed to get assigned count for {developer} in project {project['name']}: {e}")
+                    continue
             
-            return {
-                'delivery_score': delivery_score,
-                'timing_bonus_hours': timing_bonus_hours,
-                'late_penalty_mitigation': late_penalty_mitigation,
-                'days_difference': round(days_difference, 1)
-            }
+            assigned_counts[developer] = total_count
             
-        except (ValueError, TypeError):
-            return {
-                'delivery_score': 100.0,
-                'timing_bonus_hours': 0.0,
-                'late_penalty_mitigation': 0.0,
-                'days_difference': 0
-            }
-    
-    def _calculate_business_hours(self, start_time: datetime, end_time: datetime, 
-                                max_hours_per_day: float = 10.0) -> float:
-        """
-        Calculate business hours between two timestamps.
-        Only counts Monday-Friday, max hours per day.
-        
-        Args:
-            start_time: Start datetime (timezone-aware)
-            end_time: End datetime (timezone-aware)
-            max_hours_per_day: Maximum hours to count per working day
-            
-        Returns:
-            Total business hours as float
-        """
-        if start_time >= end_time:
-            return 0.0
-        
-        total_business_hours = 0.0
-        current_date = start_time.date()
-        end_date = end_time.date()
-        
-        # If same day, handle it specially
-        if current_date == end_date:
-            if current_date.weekday() < 5:  # Monday=0, Friday=4
-                hours_on_day = (end_time - start_time).total_seconds() / 3600
-                return min(hours_on_day, max_hours_per_day)
-            else:
-                return 0.0  # Weekend
-        
-        # Handle multi-day periods
-        while current_date <= end_date:
-            # Skip weekends (Monday=0, Sunday=6)
-            if current_date.weekday() >= 5:
-                current_date += timedelta(days=1)
-                continue
-            
-            if current_date == start_time.date():
-                # First day: from start_time to end of day
-                day_start = start_time
-                day_end = datetime.combine(current_date, datetime.max.time()).replace(tzinfo=start_time.tzinfo)
-                hours_on_day = (day_end - day_start).total_seconds() / 3600
-                total_business_hours += min(hours_on_day, max_hours_per_day)
-                
-            elif current_date == end_time.date():
-                # Last day: from start of day to end_time
-                day_start = datetime.combine(current_date, datetime.min.time()).replace(tzinfo=end_time.tzinfo)
-                day_end = end_time
-                hours_on_day = (day_end - day_start).total_seconds() / 3600
-                total_business_hours += min(hours_on_day, max_hours_per_day)
-                
-            else:
-                # Full day in between
-                total_business_hours += max_hours_per_day
-            
-            current_date += timedelta(days=1)
-        
-        return round(total_business_hours, 2)
-    
-    def calculate_comprehensive_kpi_per_developer(self, work_items: List[Dict]) -> Dict:
+        return assigned_counts
+
+    def calculate_comprehensive_kpi_per_developer(self, work_items: List[Dict], 
+                                                  assigned_counts: Dict[str, int] = None) -> Dict:
         """
         Calculate comprehensive KPIs separated by developer with fair efficiency metrics.
         
         Args:
-            work_items: List of work items with enhanced efficiency data
+            work_items: List of work items with enhanced efficiency data (filtered by query states)
+            assigned_counts: Dictionary mapping developer to total assigned items count (all states)
         Returns:
             Dictionary with per-developer KPI metrics and overall summary
         """
@@ -870,7 +480,9 @@ class WorkItemOperations(AzureDevOps):
         total_developers = len(developer_items)
         
         for developer, items in developer_items.items():
-            metrics = self._calculate_developer_metrics(items)
+            # Get total assigned count for this developer (all states)
+            total_assigned = assigned_counts.get(developer) if assigned_counts else None
+            metrics = self._calculate_developer_metrics(items, total_assigned)
             developer_metrics[developer] = metrics
             
             # Aggregate for overall summary
@@ -913,20 +525,22 @@ class WorkItemOperations(AzureDevOps):
             'bottlenecks': bottlenecks[:5]
         }
     
-    def _calculate_developer_metrics(self, work_items: List[Dict]) -> Dict:
+    def _calculate_developer_metrics(self, work_items: List[Dict], total_assigned_items: int = None) -> Dict:
         """
         Calculate detailed metrics for a single developer.
         
         Args:
-            work_items: List of work items for one developer
+            work_items: List of work items for one developer (filtered by query states)
+            total_assigned_items: Total number of items assigned to developer (all states)
             
         Returns:
             Dictionary with developer-specific metrics
         """
         if not work_items:
-            return self._empty_developer_metrics()
+            return self._empty_developer_metrics(total_assigned_items)
         
-        total_items = len(work_items)
+        # Use provided total or fallback to filtered items count
+        total_items = total_assigned_items if total_assigned_items is not None else len(work_items)
         completed_items = 0
         items_with_efficiency = 0  # Only completed items have efficiency data
         on_time_count = 0
@@ -983,7 +597,7 @@ class WorkItemOperations(AzureDevOps):
                     delivery_timing_counts['late_15_plus'] += 1
         
         # Calculate averages and percentages
-        completion_rate = (completed_items / total_items) * 100
+        completion_rate = (completed_items / total_items) * 100 if total_items > 0 else 0
         
         # Efficiency metrics based only on completed items with efficiency data
         if items_with_efficiency > 0:
@@ -999,12 +613,9 @@ class WorkItemOperations(AzureDevOps):
             avg_days_ahead_behind = 0
             reopened_rate = 0
         
-        # Overall developer score (weighted combination)
-        overall_score = (
-            (avg_fair_efficiency * 0.4) +  # 40% fair efficiency
-            (avg_delivery_score * 0.3) +    # 30% delivery score  
-            (completion_rate * 0.2) +       # 20% completion rate
-            (min(100, on_time_delivery) * 0.1)  # 10% on-time delivery (capped at 100)
+        # Overall developer score (using configurable weights)
+        overall_score = self.efficiency_calculator.calculate_developer_score(
+            completion_rate, avg_fair_efficiency, avg_delivery_score, on_time_delivery
         )
         
         return {
@@ -1027,10 +638,10 @@ class WorkItemOperations(AzureDevOps):
             'delivery_timing_breakdown': delivery_timing_counts
         }
     
-    def _empty_developer_metrics(self) -> Dict:
+    def _empty_developer_metrics(self, total_assigned_items: int = 0) -> Dict:
         """Return empty metrics structure for developers with no work items."""
         return {
-            'total_work_items': 0,
+            'total_work_items': total_assigned_items or 0,
             'completed_items': 0,
             'completion_rate': 0,
             'on_time_delivery_percentage': 0,
@@ -1056,8 +667,10 @@ class WorkItemOperations(AzureDevOps):
                                        query: str, 
                                        target_projects: Optional[List[Dict]] = None,
                                        project_names: Optional[List[str]] = None) -> List[Dict]:
-        print("Executing organization-level WIQL query...")
-        endpoint = f"_apis/wit/wiql?api-version={self.get_api_version('wiql')}"
+        print("Executing organization-level WIQL query with pagination...")
+        base_endpoint = f"_apis/wit/wiql?api-version={self.get_api_version('wiql')}"
+        
+        # Apply project filtering if specified
         if target_projects and len(target_projects) < 20:
             project_names = [p['name'] for p in target_projects]
             project_filter = "', '".join(project_names)
@@ -1065,13 +678,56 @@ class WorkItemOperations(AzureDevOps):
                 query = query.replace("WHERE", f"WHERE [System.TeamProject] IN ('{project_filter}') AND")
             else:
                 query = query.replace("FROM WorkItems", f"FROM WorkItems WHERE [System.TeamProject] IN ('{project_filter}')")
+        
         print(f"Organization query: {query}")
-        data = {"query": query}
-        response = self.handle_request("POST", endpoint, data)
-        work_items = response.get("workItems", [])
-        if not work_items:
+        
+        # Collect all work items using pagination
+        all_work_item_ids = []
+        continuation_token = None
+        page_count = 0
+        
+        while True:
+            page_count += 1
+            
+            # Build endpoint with continuation token if available
+            if continuation_token:
+                endpoint = f"{base_endpoint}&continuationToken={continuation_token}"
+                print(f"  Fetching page {page_count} with continuation token...")
+            else:
+                endpoint = base_endpoint
+                print(f"  Fetching page {page_count}...")
+            
+            # Execute WIQL query
+            data = {"query": query}
+            response = self.handle_request("POST", endpoint, data)
+            
+            # Extract work items and continuation token
+            page_work_items = response.get("workItems", [])
+            continuation_token = response.get("continuationToken")
+            
+            if page_work_items:
+                all_work_item_ids.extend(page_work_items)
+                print(f"    Found {len(page_work_items)} work items on page {page_count}")
+            else:
+                print(f"    No work items found on page {page_count}")
+            
+            # Break if no continuation token (last page)
+            if not continuation_token:
+                print(f"  Pagination complete after {page_count} pages")
+                break
+                
+            # Safety check to prevent infinite loops
+            if page_count > 100:
+                print(f"  WARNING: Stopping after {page_count} pages to prevent infinite loop")
+                break
+        
+        if not all_work_item_ids:
+            print("No work items found across all pages")
             return []
-        print(f"Found {len(work_items)} work items, fetching details...")
+            
+        print(f"Total work items found across all pages: {len(all_work_item_ids)}")
+        print("Fetching detailed work item information...")
+        
         all_work_items = []
         batch_size = 200
         # Build a mapping from project id and name to project info for later use
@@ -1081,8 +737,8 @@ class WorkItemOperations(AzureDevOps):
             for proj in target_projects:
                 project_id_to_name[proj['id']] = proj['name']
                 project_name_to_id[proj['name'].strip()] = proj['id']
-        for i in range(0, len(work_items), batch_size):
-            batch = work_items[i:i + batch_size]
+        for i in range(0, len(all_work_item_ids), batch_size):
+            batch = all_work_item_ids[i:i + batch_size]
             ids = [str(item['id']) for item in batch]
             ids_str = ",".join(ids)
             # Use organization-level work items endpoint
@@ -1108,130 +764,22 @@ class WorkItemOperations(AzureDevOps):
                     "start_date": fields.get("Microsoft.VSTS.Scheduling.StartDate", ""),
                     "target_date": fields.get("Microsoft.VSTS.Scheduling.TargetDate", ""),
                     "closed_date": fields.get("Microsoft.VSTS.Common.ClosedDate", ""),
+                    "resolved_date": fields.get("Microsoft.VSTS.Common.ResolvedDate", ""),
                     "area_path": fields.get("System.AreaPath", ""),
                     "iteration_path": fields.get("System.IterationPath", ""),
                     "project_id": project_id if project_id else "Unknown",
-                    "project_name": project_name
+                    "project_name": project_name,
+                    # Enhanced fields
+                    "original_estimate": fields.get("Microsoft.VSTS.Scheduling.OriginalEstimate", 0),
+                    "priority": fields.get("Microsoft.VSTS.Common.Priority", 0),
+                    "reason": fields.get("System.Reason", ""),
+                    "resolved_by": fields.get("Microsoft.VSTS.Common.ResolvedBy", {}).get("displayName", ""),
+                    "created_by": fields.get("System.CreatedBy", {}).get("displayName", ""),
+                    "changed_by": fields.get("System.ChangedBy", {}).get("displayName", "")
                 }
                 all_work_items.append(simplified_item)
         return all_work_items
 
-    def find_projects_with_user_activity_audit_log(self,
-                                                  assigned_to: List[str],
-                                                  start_date: Optional[str] = None,
-                                                  end_date: Optional[str] = None,
-                                                  max_projects: int = 100) -> List[Dict]:
-        """
-        Find projects with user activity using Azure DevOps Audit Log API.
-        This is the most efficient method for discovering user activity.
-        
-        Args:
-            assigned_to: List of user emails/UPNs to look for
-            start_date: Start date for audit log query (YYYY-MM-DD format)
-            end_date: End date for audit log query (YYYY-MM-DD format)
-            max_projects: Maximum number of projects to return
-            
-        Returns:
-            List of projects with user activity
-        """
-        print(f"Using Audit Log API to find projects with activity for: {', '.join(assigned_to)}")
-        
-        # Format dates for audit log API (ISO 8601 format)
-        if start_date:
-            start_time = f"{start_date}T00:00:00Z"
-        else:
-            # Default to 30 days ago
-            start_time = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        
-        if end_date:
-            end_time = f"{end_date}T23:59:59Z"
-        else:
-            end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-        
-        projects_with_activity = set()
-        
-        # Query audit log for each user
-        for user in assigned_to:
-            try:
-                print(f"  Querying audit log for user: {user}")
-                
-                # Build audit log query
-                audit_endpoint = f"https://auditservice.dev.azure.com/{self.organization}/_apis/audit/auditlog"
-                params = {
-                    "startTime": start_time,
-                    "endTime": end_time,
-                    "actorUPN": user,
-                    "api-version": "7.1-preview.1",
-                    "batchSize": 1000  # Get more results per request
-                }
-                
-                # Use custom request handling for audit service
-                headers = {
-                    "Authorization": f"Basic {self.encoded_pat}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                }
-                
-                import requests
-                
-                # Make the request with proper error handling
-                response = requests.get(audit_endpoint, params=params, headers=headers)
-                print(response)
-                if response.status_code == 200:
-                    audit_data = response.json()
-                    entries = audit_data.get("decoratedAuditLogEntries", [])
-                    
-                    print(f"    Found {len(entries)} audit log entries for {user}")
-                    
-                    # Extract project names from audit entries
-                    for entry in entries:
-                        project_name = entry.get("projectName")
-                        if project_name and project_name != "Unknown":
-                            projects_with_activity.add(project_name)
-                            
-                elif response.status_code == 403:
-                    print(f"    WARNING: Access denied to audit log for {user}")
-                    print("    This might mean:")
-                    print("    - Audit logging is not enabled for this organization")
-                    print("    - Your PAT doesn't have 'vso.auditlog' scope")
-                    print("    - Organization is not backed by Microsoft Entra ID")
-                    print("    Falling back to previous method...")
-                    return self.find_projects_with_user_activity_sdk(
-                        assigned_to=assigned_to,
-                        max_projects=max_projects
-                    )
-                else:
-                    print(f"    ERROR: Audit log query failed with status {response.status_code}")
-                    print(f"    Response: {response.text[:200]}...")
-                    
-            except Exception as e:
-                print(f"    ERROR querying audit log for {user}: {e}")
-                continue
-        
-        # Convert project names to project objects
-        if projects_with_activity:
-            print(f"Found user activity in {len(projects_with_activity)} projects from audit log")
-            
-            # Get full project details for the projects with activity
-            target_projects = []
-            all_projects = self.get_all_projects()
-            
-            for project in all_projects:
-                if project['name'] in projects_with_activity:
-                    target_projects.append(project)
-                    
-                # Respect max_projects limit
-                if len(target_projects) >= max_projects:
-                    break
-            
-            project_names = [p['name'] for p in target_projects]
-            project_ids = [p['id'] for p in target_projects]
-            print(f"Audit log-based project discovery found: {', '.join(project_ids)}")
-            
-            return target_projects
-        else:
-            print("No projects found with user activity in audit log")
-            return []
 
     def get_work_items_with_efficiency(self,
                                      project_id: Optional[str] = None,
@@ -1247,7 +795,8 @@ class WorkItemOperations(AzureDevOps):
                                      productive_states: Optional[List[str]] = None,
                                      blocked_states: Optional[List[str]] = None,
                                      all_projects: bool = False,
-                                     max_projects: int = 50) -> Dict:
+                                     max_projects: int = None,
+                                     refresh_projects_cache: bool = False) -> Dict:
         """
         Main method to get work items with efficiency calculations.
         
@@ -1275,11 +824,14 @@ class WorkItemOperations(AzureDevOps):
             # Include both completed and active/new items for comprehensive analysis
             states = ["Closed", "Done", "Resolved", "Active", "New", "To Do", "In Progress"]
             
-        # Default to last 30 days if no date range provided
-        if start_date is None and end_date is None:
+        # Only set default date range if both date filters are None AND we have states that require date filtering
+        if start_date is None and end_date is None and date_field == "ClosedDate":
+            # Only auto-set date range for closed date queries to prevent missing data
             end_date = datetime.now().strftime("%Y-%m-%d")
-            start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
-            print(f"No date range provided, defaulting to last 30 days: {start_date} to {end_date}")
+            start_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")  # Extended to 90 days
+            print(f"No date range provided for ClosedDate query, defaulting to last 90 days: {start_date} to {end_date}")
+        elif start_date is None and end_date is None:
+            print("No date range provided - querying all work items (no date filter)")
             
         # Do not set defaults for productive_states, blocked_states, or additional_filters
         # Determine which projects to query
@@ -1293,12 +845,15 @@ class WorkItemOperations(AzureDevOps):
                 all_projects = self.get_all_projects()
                 target_projects = self.filter_projects_by_name(all_projects, project_names)
             elif assigned_to and not all_projects:
-                # Smart filtering: use audit log for most efficient project discovery
-                print("Using audit log-based project discovery for optimal performance...")
-                target_projects = self.find_projects_with_user_activity_audit_log(
+                # Use smart project discovery
+                print("Using smart project discovery...")
+                target_projects = self.find_projects_with_user_activity(
                     assigned_to=assigned_to,
+                    work_item_types=work_item_types,
+                    states=states,
                     start_date=start_date,
                     end_date=end_date,
+                    date_field=date_field,
                     max_projects=max_projects
                 )
             else:
@@ -1355,7 +910,11 @@ class WorkItemOperations(AzureDevOps):
             if work_items_with_projects:
                 filtered_work_items = [item for item in work_items_with_projects if item.get('project_id', None) not in (None, '', 'Unknown')]
                 all_work_items = filtered_work_items
-                successful_projects = list(set([item.get('project_id') for item in all_work_items]))
+                found_project_ids = {item.get('project_id') for item in all_work_items if item.get('project_id')}
+                successful_projects = [
+                    proj for proj in target_projects
+                    if proj.get('id') in found_project_ids
+                ]
                 print(f"Found {len(all_work_items)} work items across {len(successful_projects)} projects")
                 if len(filtered_work_items) < len(work_items_with_projects):
                     print(f"Skipped {len(work_items_with_projects) - len(filtered_work_items)} work items with unknown project id")
@@ -1454,21 +1013,62 @@ class WorkItemOperations(AzureDevOps):
             
         print(f"{'='*60}")
         
+        # Filter work items based on configuration before efficiency calculation
+        if all_work_items:
+            print("Filtering work items based on state configuration...")
+            filtered_work_items = []
+            ignored_count = 0
+            
+            for item in all_work_items:
+                # Check if work item should be included based on current state
+                if self.config_loader.should_include_work_item(item):
+                    filtered_work_items.append(item)
+                else:
+                    ignored_count += 1
+                    print(f"  Ignoring work item {item['id']} - state: {item.get('state', 'Unknown')}")
+            
+            print(f"Filtered out {ignored_count} work items. Processing {len(filtered_work_items)} items.")
+            all_work_items = filtered_work_items
+        
         # Calculate efficiency if requested
-        if calculate_efficiency:
-            print("Calculating enhanced efficiency metrics...")
+        if calculate_efficiency and all_work_items:
+            print("Calculating enhanced efficiency metrics with state categories...")
+            state_config = self.config_loader.get_state_categories()
+            
             for item in all_work_items:
                 try:
                     state_history = self.get_work_item_revisions(item['project_id'], item["id"], item['project_name'])
+                    
+                    # Double-check with state history
+                    if not self.config_loader.should_include_work_item_with_history(item, state_history):
+                        print(f"  Ignoring work item {item['id']} after state history review")
+                        continue
+                    
                     efficiency = self.calculate_fair_efficiency_metrics(
-                        item, state_history, productive_states, blocked_states
+                        item, state_history, state_config
                     )
                     item["efficiency"] = efficiency
+                    
+                    # Skip ignored work items from further processing
+                    if efficiency.get('should_ignore', False):
+                        print(f"  Work item {item['id']} marked for ignoring by efficiency calculator")
+                        continue
+                        
                 except Exception as e:
                     print(f"Error calculating efficiency for work item {item['id']}: {e}")
                     item["efficiency"] = {}
+        # Get total assigned items count for each developer (all states)
+        assigned_counts = {}
+        if assigned_to:
+            print("Getting total assigned items count for each developer...")
+            assigned_counts = self._get_total_assigned_items_by_developer(
+                successful_projects, assigned_to, work_item_types, start_date, end_date
+            )
+            for dev, count in assigned_counts.items():
+                print(f"  {dev}: {count} total assigned items")
+        
         # Calculate comprehensive KPIs per developer
-        kpis = self.calculate_comprehensive_kpi_per_developer(all_work_items)
+        kpis = self.calculate_comprehensive_kpi_per_developer(all_work_items, assigned_counts)
         # Add start_date, target_date, close_date to each work item summary in the output
         for item in all_work_items:
             # These fields are already present, but ensure they are included in the summary

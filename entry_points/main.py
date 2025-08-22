@@ -1,9 +1,15 @@
 import argparse
-from commands import AzureDevOpsCommands
-from AzureDevopsProjectOperations import AzureDevOpsProjectOperations
-from WorkItemOperations import WorkItemOperations
-from config import Config
+import sys
 import os
+from pathlib import Path
+
+# Add the parent directory to Python path to access classes and config
+sys.path.append(str(Path(__file__).parent.parent))
+
+from classes.commands import AzureDevOpsCommands
+from classes.AzureDevopsProjectOperations import AzureDevOpsProjectOperations
+from classes.WorkItemOperations import WorkItemOperations
+from config.config import Config
 from dotenv import load_dotenv
 import json
 
@@ -164,8 +170,42 @@ def handle_work_item_query(args, organization, personal_access_token):
     if args.iteration_path:
         additional_filters['iteration_path'] = args.iteration_path
     
-    # Create WorkItemOperations instance
-    work_item_ops = WorkItemOperations(organization, personal_access_token)
+    # Build scoring configuration from arguments
+    scoring_config = None
+    if args.scoring_config:
+        try:
+            with open(args.scoring_config, 'r') as f:
+                scoring_config = json.load(f)
+            print(f"Loaded scoring configuration from {args.scoring_config}")
+        except Exception as e:
+            print(f"Error loading scoring config: {e}")
+            scoring_config = {}
+    else:
+        scoring_config = {}
+    
+    # Apply individual scoring parameter overrides
+    if args.completion_bonus is not None:
+        scoring_config['completion_bonus_percentage'] = args.completion_bonus
+    if args.max_efficiency_cap is not None:
+        scoring_config['max_efficiency_cap'] = args.max_efficiency_cap
+    if args.max_hours_per_day is not None:
+        scoring_config['max_hours_per_day'] = args.max_hours_per_day
+    
+    # Apply developer score weight overrides
+    if any([args.fair_efficiency_weight, args.delivery_score_weight, args.completion_rate_weight, args.on_time_delivery_weight]):
+        if 'developer_score_weights' not in scoring_config:
+            scoring_config['developer_score_weights'] = {}
+        if args.fair_efficiency_weight is not None:
+            scoring_config['developer_score_weights']['fair_efficiency'] = args.fair_efficiency_weight
+        if args.delivery_score_weight is not None:
+            scoring_config['developer_score_weights']['delivery_score'] = args.delivery_score_weight
+        if args.completion_rate_weight is not None:
+            scoring_config['developer_score_weights']['completion_rate'] = args.completion_rate_weight
+        if args.on_time_delivery_weight is not None:
+            scoring_config['developer_score_weights']['on_time_delivery'] = args.on_time_delivery_weight
+    
+    # Create WorkItemOperations instance with scoring configuration
+    work_item_ops = WorkItemOperations(organization, personal_access_token, scoring_config)
     
     # Determine query scope
     if args.project_id:
@@ -216,7 +256,12 @@ def handle_work_item_query(args, organization, personal_access_token):
     # Show projects queried
     projects_queried = query_info.get('projects_queried', [])
     if projects_queried:
-        print(f"Projects queried: {', '.join(projects_queried)}")
+        # Handle both string and dict formats
+        if projects_queried and isinstance(projects_queried[0], dict):
+            project_names = [p.get('name', str(p)) for p in projects_queried]
+        else:
+            project_names = projects_queried
+        print(f"Projects queried: {', '.join(project_names)}")
     
     filters = query_info.get('filters_applied', {})
     if filters.get('assigned_to'):
@@ -360,6 +405,16 @@ def main():
     parser.add_argument("--max-projects", type=int, default=50, help="Maximum number of projects to check for user activity (default: 50)")
     parser.add_argument("--productive-states", help="Comma-separated list of states considered productive (e.g., 'Active,In Progress,Development')")
     parser.add_argument("--blocked-states", help="Comma-separated list of states considered blocked (e.g., 'Blocked,On Hold,Waiting')")
+    
+    # Developer scoring configuration
+    parser.add_argument("--scoring-config", help="Path to JSON file with custom scoring configuration")
+    parser.add_argument("--completion-bonus", type=float, help="Completion bonus percentage (default: 0.20 = 20%)")
+    parser.add_argument("--max-efficiency-cap", type=float, help="Maximum efficiency cap percentage (default: 150.0)")
+    parser.add_argument("--max-hours-per-day", type=float, help="Maximum business hours per day (default: 10.0)")
+    parser.add_argument("--fair-efficiency-weight", type=float, help="Fair efficiency weight in developer score (default: 0.4)")
+    parser.add_argument("--delivery-score-weight", type=float, help="Delivery score weight in developer score (default: 0.3)")
+    parser.add_argument("--completion-rate-weight", type=float, help="Completion rate weight in developer score (default: 0.2)")
+    parser.add_argument("--on-time-delivery-weight", type=float, help="On-time delivery weight in developer score (default: 0.1)")
     
     args = parser.parse_args()
 

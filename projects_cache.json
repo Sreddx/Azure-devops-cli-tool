@@ -1,0 +1,1639 @@
+{
+  "timestamp": "2025-08-21T15:37:25.572153",
+  "organization": "iNbest",
+  "project_count": 272,
+  "projects": [
+    {
+      "id": "ba68f899-6772-4466-8a03-65b9db5533de",
+      "name": "Fultra - Soporte",
+      "description": "Soporte brindado a empresa Fultra para diferentes proyectos:\n* Mis Compras",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ba68f899-6772-4466-8a03-65b9db5533de"
+    },
+    {
+      "id": "cf3a9eb4-ffda-4f32-ada6-a8401e46fc2b",
+      "name": "Area de PM",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cf3a9eb4-ffda-4f32-ada6-a8401e46fc2b"
+    },
+    {
+      "id": "b3696b3d-fc82-4802-8c78-8514afb71a9e",
+      "name": "Ecodeli Industrial - Migracion Hostgator GCP",
+      "description": "Migracion Hostgator GCP",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b3696b3d-fc82-4802-8c78-8514afb71a9e"
+    },
+    {
+      "id": "5bc9571b-a204-43ea-843c-0665cee151df",
+      "name": "Rey Tláloc - Chatbot",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/5bc9571b-a204-43ea-843c-0665cee151df"
+    },
+    {
+      "id": "8f994785-5958-473e-bf88-dc754b97f3ae",
+      "name": "Cengage",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8f994785-5958-473e-bf88-dc754b97f3ae"
+    },
+    {
+      "id": "f16552f7-54e4-4f29-ad69-cc7724dfa584",
+      "name": "GML- Loyalty",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f16552f7-54e4-4f29-ad69-cc7724dfa584"
+    },
+    {
+      "id": "f038eb8c-73e2-4b35-bfe9-bec6eb896134",
+      "name": "Cilantro_Guaxillo-Ecommerce",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f038eb8c-73e2-4b35-bfe9-bec6eb896134"
+    },
+    {
+      "id": "910641ea-76be-4213-b1c7-bdcf8bb0dfaa",
+      "name": "UX-UI Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/910641ea-76be-4213-b1c7-bdcf8bb0dfaa"
+    },
+    {
+      "id": "0f2e7623-99de-42e6-9e90-3df24ac0a74f",
+      "name": "Iconn- Migración",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0f2e7623-99de-42e6-9e90-3df24ac0a74f"
+    },
+    {
+      "id": "670d04c9-5f3b-4907-a267-e4eb7d3f3d1e",
+      "name": "Red Ambiental - Manifiesto Digital",
+      "description": "Con el objetivo de cumplir con la normatividad de las autoridades regulatorias en la disposición de los residuos peligrosos biológico-infecciosos (RPBI), se requieren habilitar herramientas y/o aplicaciones que permitan generar manifiestos digitales, que permitan mejorar la experiencia en el servicio al cliente, a través de agilizar los tiempos de facturación, cobranza y entrega de documentación, así como un control más eficaz de la misma.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/670d04c9-5f3b-4907-a267-e4eb7d3f3d1e"
+    },
+    {
+      "id": "d958432b-2071-4745-822a-c404a58409e8",
+      "name": "Haasler Punto de venta",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d958432b-2071-4745-822a-c404a58409e8"
+    },
+    {
+      "id": "435f1cd0-5606-441e-99d3-8ea7f52f350d",
+      "name": "iNBest - Pagina web",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/435f1cd0-5606-441e-99d3-8ea7f52f350d"
+    },
+    {
+      "id": "6b99fd3f-05a3-4972-8549-0593381e338d",
+      "name": "Carico",
+      "description": "Chatbot",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6b99fd3f-05a3-4972-8549-0593381e338d"
+    },
+    {
+      "id": "563d8462-335d-40c6-88da-e9711c829fed",
+      "name": "CI Team",
+      "description": "Este proyecto ayudará a ir registrando acciones exclusivas del equipo C&I Team.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/563d8462-335d-40c6-88da-e9711c829fed"
+    },
+    {
+      "id": "a6ca18af-17d2-4caa-8e67-ca7a5c2b5982",
+      "name": "Preventa Hub",
+      "description": "Hub para registrar toda actividad y esfuerzo invertido en cualquier punto de preventa (Desde levantamiento hasta planeación y presentación de propuesta), ",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a6ca18af-17d2-4caa-8e67-ca7a5c2b5982"
+    },
+    {
+      "id": "c0384662-d4aa-4afc-a426-3703686a2325",
+      "name": "AMENIJAL - Conmutador",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c0384662-d4aa-4afc-a426-3703686a2325"
+    },
+    {
+      "id": "68cad5c6-479a-4dea-b240-477cdc9e4c67",
+      "name": "VitroVerse",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/68cad5c6-479a-4dea-b240-477cdc9e4c67"
+    },
+    {
+      "id": "55ec8900-6bac-47cd-9bee-70e700f9456d",
+      "name": "ACE- Reconocimiento facial",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/55ec8900-6bac-47cd-9bee-70e700f9456d"
+    },
+    {
+      "id": "ec21a2f5-c362-4217-bdc1-892218aeec0b",
+      "name": "SF Consultoría - Facturación",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ec21a2f5-c362-4217-bdc1-892218aeec0b"
+    },
+    {
+      "id": "ef799798-b094-436e-b0ef-ab00f74d53e0",
+      "name": "Ultra Laboratorios- Conexión AWS -GCP para Chatbot de Whatsapp",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ef799798-b094-436e-b0ef-ab00f74d53e0"
+    },
+    {
+      "id": "54b9de8f-4307-4b1c-8da6-98c80d8196fb",
+      "name": "Head of Innovation Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/54b9de8f-4307-4b1c-8da6-98c80d8196fb"
+    },
+    {
+      "id": "4003239b-dbbd-41ca-b99c-06caef22f0ce",
+      "name": "Red Ambiental - Sistema de Básculas Cancún e Irapuato",
+      "description": "Sincronización de tablas de boletas de básculas en base de datos en server OnPremise a base de datos en Azure SQL.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4003239b-dbbd-41ca-b99c-06caef22f0ce"
+    },
+    {
+      "id": "7384e09c-be0e-486f-bfdf-c638651d3101",
+      "name": "Estafeta POC Búsqueda de Imágenes",
+      "description": "Proyecto POC Búsqueda de Imágenes por AI. {\"tags\": [\"Innovation\", \"ErikaLuna\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7384e09c-be0e-486f-bfdf-c638651d3101"
+    },
+    {
+      "id": "f2156bef-0702-4272-9811-7797d04799e5",
+      "name": "FRAGUA",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f2156bef-0702-4272-9811-7797d04799e5"
+    },
+    {
+      "id": "63a64587-946c-428b-a782-ec3f5ba4cbc9",
+      "name": "Automatizaciones Cloud Delivery",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/63a64587-946c-428b-a782-ec3f5ba4cbc9"
+    },
+    {
+      "id": "0b71a3ed-d52b-4b54-840e-832587d2cc02",
+      "name": "Municipio GDL Asistente Virtual",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0b71a3ed-d52b-4b54-840e-832587d2cc02"
+    },
+    {
+      "id": "18f6fc94-f204-4003-9df4-58ed97420350",
+      "name": "JOM",
+      "description": "Infraestructura ",
+      "url": "https://dev.azure.com/inbest/_apis/projects/18f6fc94-f204-4003-9df4-58ed97420350"
+    },
+    {
+      "id": "22260bee-9ca2-4685-af4e-33df0d16b804",
+      "name": "UPN- Migración",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/22260bee-9ca2-4685-af4e-33df0d16b804"
+    },
+    {
+      "id": "782bcf66-d5e5-4cbf-9eb4-b9c226b88110",
+      "name": "Future Core - Área 151",
+      "description": "Desarrollo de sitio administrativo para sobres y documentos de herramienta DocuSign",
+      "url": "https://dev.azure.com/inbest/_apis/projects/782bcf66-d5e5-4cbf-9eb4-b9c226b88110"
+    },
+    {
+      "id": "e85b4610-24da-436b-8176-1171b97d6510",
+      "name": "Calux - Dashboards Power BI",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e85b4610-24da-436b-8176-1171b97d6510"
+    },
+    {
+      "id": "47153e97-5a28-41c6-8b9d-b9ef8bc4d368",
+      "name": "Head of Innovation JRH Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/47153e97-5a28-41c6-8b9d-b9ef8bc4d368"
+    },
+    {
+      "id": "e2cf3d91-3b4c-42c1-a9bd-b744dae48ab3",
+      "name": "métricasQA-Test",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e2cf3d91-3b4c-42c1-a9bd-b744dae48ab3"
+    },
+    {
+      "id": "fcee8b6b-ee77-4b09-b2f0-b13d02b89822",
+      "name": "Solvo - Desarrollo CodeOnTime",
+      "description": "Portal Administrativo + Sitio Comercial",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fcee8b6b-ee77-4b09-b2f0-b13d02b89822"
+    },
+    {
+      "id": "8acde0c0-df9a-47a8-8e75-93669785b5f7",
+      "name": "Vitro-Optimización de cortes",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8acde0c0-df9a-47a8-8e75-93669785b5f7"
+    },
+    {
+      "id": "07be24ff-cdf8-436d-881a-a94e109267f0",
+      "name": "Googov -migración de servidores",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/07be24ff-cdf8-436d-881a-a94e109267f0"
+    },
+    {
+      "id": "b12d4de5-34e0-4747-92fe-2aed7c944949",
+      "name": "Real Systems - Migración",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b12d4de5-34e0-4747-92fe-2aed7c944949"
+    },
+    {
+      "id": "135a72af-3295-473f-9dc7-6a1dda743284",
+      "name": "Project Test Sebastián",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/135a72af-3295-473f-9dc7-6a1dda743284"
+    },
+    {
+      "id": "f9933de0-655e-4410-bc48-18ad49915248",
+      "name": "GML - CRM Flotillas Internas",
+      "description": "Cliente: GML",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f9933de0-655e-4410-bc48-18ad49915248"
+    },
+    {
+      "id": "e647ce58-5131-4d55-a998-fe0212eaede8",
+      "name": "Compas",
+      "description": "Hub para el registro de horas por póliza del cliente \"Compas\"",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e647ce58-5131-4d55-a998-fe0212eaede8"
+    },
+    {
+      "id": "ba7e9689-87e5-463d-9b45-ae9a94d2a3d1",
+      "name": "Modern Work Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ba7e9689-87e5-463d-9b45-ae9a94d2a3d1"
+    },
+    {
+      "id": "8354200c-9a06-4127-a659-0646f88af44d",
+      "name": "DMX - Consultoria Google",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8354200c-9a06-4127-a659-0646f88af44d"
+    },
+    {
+      "id": "cee559b0-338b-4de1-a59d-9a7fbca5b578",
+      "name": "VItro - PWA1",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cee559b0-338b-4de1-a59d-9a7fbca5b578"
+    },
+    {
+      "id": "cf2295a7-bff1-4319-9f72-266915dcee7d",
+      "name": "Hyson-Raindbird ChatBot",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cf2295a7-bff1-4319-9f72-266915dcee7d"
+    },
+    {
+      "id": "17ad64d5-4e99-41ac-b5bf-766504504eed",
+      "name": "Ho-Ho",
+      "description": "Reconocimiento IA de imagenes",
+      "url": "https://dev.azure.com/inbest/_apis/projects/17ad64d5-4e99-41ac-b5bf-766504504eed"
+    },
+    {
+      "id": "c428f7db-ee06-4daf-b80a-2078c42d9017",
+      "name": "Hoteles City",
+      "description": "Dashboard / Elearning / Panel de Control / Brandsite / Channel Manager / Yield / API Suite\ny CRM",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c428f7db-ee06-4daf-b80a-2078c42d9017"
+    },
+    {
+      "id": "499590e3-651b-415f-bb64-49daabd7f802",
+      "name": "Conciliación Laboral - Chatbot",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/499590e3-651b-415f-bb64-49daabd7f802"
+    },
+    {
+      "id": "11ef6b5a-6416-40f8-9629-0b13c924f900",
+      "name": "People - HR - Activities Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/11ef6b5a-6416-40f8-9629-0b13c924f900"
+    },
+    {
+      "id": "73b8b35a-cb60-4803-9442-d15960bc5784",
+      "name": "Nadro-Webscraping",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/73b8b35a-cb60-4803-9442-d15960bc5784"
+    },
+    {
+      "id": "3e2beb53-7225-4e1e-a9c6-4cb65dbbf826",
+      "name": "Altabix",
+      "description": "Hub para los proyectos del cliente Altabix",
+      "url": "https://dev.azure.com/inbest/_apis/projects/3e2beb53-7225-4e1e-a9c6-4cb65dbbf826"
+    },
+    {
+      "id": "5e8fb32b-8c2f-47ea-84a1-bd24671595c6",
+      "name": "Oxxo - app",
+      "description": "Soporte de aplicaciones y nuevas iniciativas para la fábrica de Armado\nBWD + iNBest \nAsignación",
+      "url": "https://dev.azure.com/inbest/_apis/projects/5e8fb32b-8c2f-47ea-84a1-bd24671595c6"
+    },
+    {
+      "id": "f8c8881c-d309-4b9f-a61b-395f6694ff04",
+      "name": "Vinkos - Consultoría",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f8c8881c-d309-4b9f-a61b-395f6694ff04"
+    },
+    {
+      "id": "be572e38-f578-4a08-9146-e0c48e4bbfab",
+      "name": "Farmacias YZA - Capacitacion Power BI",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/be572e38-f578-4a08-9146-e0c48e4bbfab"
+    },
+    {
+      "id": "05bfde54-0819-49b7-81bd-0471681a67a0",
+      "name": "Cenmex - Levantamiento Biostar",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/05bfde54-0819-49b7-81bd-0471681a67a0"
+    },
+    {
+      "id": "fbdbf108-2e9c-4daa-83fd-58d96232bea8",
+      "name": "Yo Contigo - Fiscalía de Baja California - Video Denuncia",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fbdbf108-2e9c-4daa-83fd-58d96232bea8"
+    },
+    {
+      "id": "3587f323-5b9f-4ade-aea2-1df087ed2818",
+      "name": "EP DE MEXICO MIGRACION BLUEHOST",
+      "description": "MIGRACION BLUEHOST\n",
+      "url": "https://dev.azure.com/inbest/_apis/projects/3587f323-5b9f-4ade-aea2-1df087ed2818"
+    },
+    {
+      "id": "e7a6d75b-c660-44b3-b8ec-b756bfb97b5a",
+      "name": "Team QA",
+      "description": "Este proyecto se crea para el tracking de tareas y control interno del team QA",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e7a6d75b-c660-44b3-b8ec-b756bfb97b5a"
+    },
+    {
+      "id": "42cd3c42-00ec-43f0-9be4-df0550d5565e",
+      "name": "MIT Concreto - Dashboard",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/42cd3c42-00ec-43f0-9be4-df0550d5565e"
+    },
+    {
+      "id": "1177604c-01b1-436b-80c3-335929ec1af9",
+      "name": "Unión de Tula - App",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/1177604c-01b1-436b-80c3-335929ec1af9"
+    },
+    {
+      "id": "2ad80c71-53ff-4cb1-8a9a-1173baf4fdcc",
+      "name": "Nadro - RPA Macrosolped 2.0",
+      "description": "Migración de flujos en power automate desktop a nube.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/2ad80c71-53ff-4cb1-8a9a-1173baf4fdcc"
+    },
+    {
+      "id": "a3e619aa-c9e0-429b-9aa6-87326fafc7ec",
+      "name": "KidZania",
+      "description": "Aplicativo Amazon",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a3e619aa-c9e0-429b-9aa6-87326fafc7ec"
+    },
+    {
+      "id": "e05d6ee6-f84a-475b-85c4-802f2e296b9c",
+      "name": "Astros - Web",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e05d6ee6-f84a-475b-85c4-802f2e296b9c"
+    },
+    {
+      "id": "5eba996c-3195-4079-9b55-06c5b4cdf94a",
+      "name": "Guntner-Soporte",
+      "description": "Soporte a implementaciones Guntner\n\nIOT Portal\nSmart Machines\n\nBWD + iNBest\n",
+      "url": "https://dev.azure.com/inbest/_apis/projects/5eba996c-3195-4079-9b55-06c5b4cdf94a"
+    },
+    {
+      "id": "18c895a5-bf42-4ae7-b1e1-266e6cac50b3",
+      "name": "Iconn - Soporte",
+      "description": "Soporte relacionado con proyectos SF de Iconn",
+      "url": "https://dev.azure.com/inbest/_apis/projects/18c895a5-bf42-4ae7-b1e1-266e6cac50b3"
+    },
+    {
+      "id": "40dccf56-5b74-48b3-b896-e73dce99732c",
+      "name": "Ad Punto",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/40dccf56-5b74-48b3-b896-e73dce99732c"
+    },
+    {
+      "id": "f0fe5324-f02f-4948-a535-35d2b9810e14",
+      "name": "GML - JAC Cloud",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f0fe5324-f02f-4948-a535-35d2b9810e14"
+    },
+    {
+      "id": "86d5603c-97ae-48b5-84c0-a4b27f24f5fa",
+      "name": "Orkestapay",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/86d5603c-97ae-48b5-84c0-a4b27f24f5fa"
+    },
+    {
+      "id": "d0a6103c-64ea-4f1b-a1dd-55b76330aca3",
+      "name": "Philips",
+      "description": "Solución integral para la gestión\nautomatizada de órdenes de servicio que optimice el flujo\nde trabajo desde la carga inicial hasta la aprobación y\nseguimiento, asegurando una mayor eficiencia y control de\nlas operaciones. {\"tags\": [\"Innovation\", \"EfrainGarcia\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d0a6103c-64ea-4f1b-a1dd-55b76330aca3"
+    },
+    {
+      "id": "a7ecd73d-4864-4b04-8c76-2ef1edfb75f3",
+      "name": "HUB RENTABILIDAAD INTERNO",
+      "description": "Proyecto Interno",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a7ecd73d-4864-4b04-8c76-2ef1edfb75f3"
+    },
+    {
+      "id": "aa9fa08a-34f8-4ecd-b76c-7448f9631b01",
+      "name": "Proyecto interno - Gestión interna (Incremento de margen)",
+      "description": "Acorde a la sesión del 22 de mayo, se está buscando tener una herramienta de control para la empresa, la cual consiste en lo siguiente:\n\nListado de clientes por grupo.\nListado de clientes en nombre comercial.\nListado de clientes en razon social.\nListado de proyectos.\nListado de consolas, licencias, servicios profesionales, horas de póliza (COSTOS)\nListado de ingresos y facturas (INGRESOS)\nListado de incentivos por cliente.\nListado de indirectos (GASTOS)\nFinalmente, un retorno real.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/aa9fa08a-34f8-4ecd-b76c-7448f9631b01"
+    },
+    {
+      "id": "c965cb98-1ae1-4c1e-984b-7dd8bea36ec9",
+      "name": "PMO- PROYECTO INTERNO",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c965cb98-1ae1-4c1e-984b-7dd8bea36ec9"
+    },
+    {
+      "id": "72d9c784-bb2c-493d-8036-04be74d28adb",
+      "name": "Data - PMO",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/72d9c784-bb2c-493d-8036-04be74d28adb"
+    },
+    {
+      "id": "562563a1-ae2d-4ba6-a010-144e4b136e60",
+      "name": "JA DE RIO",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/562563a1-ae2d-4ba6-a010-144e4b136e60"
+    },
+    {
+      "id": "e24c83d3-85b1-406b-ae97-df47ea62392f",
+      "name": "Fultra-Migración de infraestructura",
+      "description": "BWD-Migración de servidores",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e24c83d3-85b1-406b-ae97-df47ea62392f"
+    },
+    {
+      "id": "740c9432-84ec-4e85-9d6c-05247bfcdc4f",
+      "name": "Demo Data AI",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/740c9432-84ec-4e85-9d6c-05247bfcdc4f"
+    },
+    {
+      "id": "b07717d2-481b-4d9f-b627-4f6159341c49",
+      "name": "AWS Digital Competency",
+      "description": "Software Path\n-Partner-hosted FTR requirements\n-Architecture Diagram\n-Security Tool Report\n-Customer Deployment Guide",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b07717d2-481b-4d9f-b627-4f6159341c49"
+    },
+    {
+      "id": "d6e9ed27-5860-4aa6-8051-9d59acbd3398",
+      "name": "Credicor - Migración de Consola",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d6e9ed27-5860-4aa6-8051-9d59acbd3398"
+    },
+    {
+      "id": "ea5eb93e-92dc-46c0-88b7-d6aca1be1957",
+      "name": "Red ambiental- Phoenix",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ea5eb93e-92dc-46c0-88b7-d6aca1be1957"
+    },
+    {
+      "id": "91ae9dba-8e74-494c-b998-84496c3452f0",
+      "name": "Unión de Tula - Web",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/91ae9dba-8e74-494c-b998-84496c3452f0"
+    },
+    {
+      "id": "5bdfb123-9eb5-4636-a6cc-dc59fd408037",
+      "name": "Baseline",
+      "description": "Guía/estándar para la gestión de un proyecto de desarrollo en iNBest.cloud",
+      "url": "https://dev.azure.com/inbest/_apis/projects/5bdfb123-9eb5-4636-a6cc-dc59fd408037"
+    },
+    {
+      "id": "bd995011-8d91-4cac-b03b-d80c18ddb368",
+      "name": "AWS DevOps Competency",
+      "description": "Customer references:\nMAVI, Giant Motors, Obok, Hypercube\nCarpeta de sharepoint:\nhttps://inbest.sharepoint.com/:f:/s/iNBestCloud/EnmEhUgkhohJhr72xsnD7E4BcXaSorTOgTaKLnapREUYrQ?e=qmCmeS",
+      "url": "https://dev.azure.com/inbest/_apis/projects/bd995011-8d91-4cac-b03b-d80c18ddb368"
+    },
+    {
+      "id": "57e7dd17-42d6-4e87-9693-18782d7d538a",
+      "name": "Ep Market",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/57e7dd17-42d6-4e87-9693-18782d7d538a"
+    },
+    {
+      "id": "def371c9-6fb7-4a3b-88cd-62bd0ab05b79",
+      "name": "Fultra-Migración a Linux",
+      "description": "BWD-Migración a Linux",
+      "url": "https://dev.azure.com/inbest/_apis/projects/def371c9-6fb7-4a3b-88cd-62bd0ab05b79"
+    },
+    {
+      "id": "df28f19a-89dd-40eb-be8e-d57c6b281d71",
+      "name": "Cloud Projects Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/df28f19a-89dd-40eb-be8e-d57c6b281d71"
+    },
+    {
+      "id": "6dffa0b6-6613-4ff3-9328-81f08494a857",
+      "name": "Solvo - Soporte",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6dffa0b6-6613-4ff3-9328-81f08494a857"
+    },
+    {
+      "id": "30ed97d2-4afb-44cc-ac4c-45f66c0410b9",
+      "name": "Universidad Veracruzana",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/30ed97d2-4afb-44cc-ac4c-45f66c0410b9"
+    },
+    {
+      "id": "6a85e9f2-f31a-4b80-9cc5-0586cb6160d8",
+      "name": "OAG - FBO (SAP-Interfaces)",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6a85e9f2-f31a-4b80-9cc5-0586cb6160d8"
+    },
+    {
+      "id": "6d2b95c9-f4e8-483d-a62d-27232b6eba79",
+      "name": "Medica Sur - Data Lake SAP - HS_6525450275",
+      "description": "Este proyecto consiste en la implementación de un data lake en AWS. Extrayendo información de su sistema de SAP para almacenarla y procesarla en el repositorio de lago de datos dejando la información lista para el consumo en sus tableros de PowerBI.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6d2b95c9-f4e8-483d-a62d-27232b6eba79"
+    },
+    {
+      "id": "a082b3ee-df94-4c3a-a2d3-e18f2d93dc61",
+      "name": "Telemática - Reconocimiento de imagen y video mediante AI",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a082b3ee-df94-4c3a-a2d3-e18f2d93dc61"
+    },
+    {
+      "id": "e2cf9898-7a88-48eb-85cd-06b06d203b65",
+      "name": "Ideas Exitosas - Solocasas Web",
+      "description": "{\"tags\": [\"SoftwareFactory\", \"EduardoFelix\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e2cf9898-7a88-48eb-85cd-06b06d203b65"
+    },
+    {
+      "id": "540a4735-ceca-4e10-adc7-754cc4c1f15e",
+      "name": "Roomie IT",
+      "description": "Capacitación Machine Learning",
+      "url": "https://dev.azure.com/inbest/_apis/projects/540a4735-ceca-4e10-adc7-754cc4c1f15e"
+    },
+    {
+      "id": "23a375f9-905d-48f2-899d-1437a1126483",
+      "name": "GML - Post Venta",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/23a375f9-905d-48f2-899d-1437a1126483"
+    },
+    {
+      "id": "cfa75e66-953d-4549-9087-90e92287167f",
+      "name": "Vitro - PWA",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cfa75e66-953d-4549-9087-90e92287167f"
+    },
+    {
+      "id": "f04acaa4-264b-49ab-8a63-1f9bff3d5555",
+      "name": "OAG - RH",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f04acaa4-264b-49ab-8a63-1f9bff3d5555"
+    },
+    {
+      "id": "1c3310da-7b27-4b22-9cb6-cca2296794f6",
+      "name": "Estafeta - APIM",
+      "description": "Acciones para implementar prueba de concepto APIM en ambiente Estafeta.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/1c3310da-7b27-4b22-9cb6-cca2296794f6"
+    },
+    {
+      "id": "b288c81b-988d-4f89-a28c-d42061d6a5d2",
+      "name": "Grupo Guías-Homologación de Datos",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b288c81b-988d-4f89-a28c-d42061d6a5d2"
+    },
+    {
+      "id": "3e8e9bb7-c96a-491b-be2e-e28666eedddd",
+      "name": "UDEM- CHATBOT",
+      "description": "{\"tags\": [\"SoftwareFactory\", \"EduardoFelix\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/3e8e9bb7-c96a-491b-be2e-e28666eedddd"
+    },
+    {
+      "id": "fab37d61-19f9-4fb8-9068-a774ac34df3d",
+      "name": "Pre-sales",
+      "description": "Proyecto interno para registrar toda actividad y esfuerzo invertido en cualquier punto de pre-venta (Desde levantamiento, validación de área, estimación, presentación y resultados de propuesta). {\"tags\": [\"Preventa\"]}.\n\nMás detalles en Overview => Wiki.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fab37d61-19f9-4fb8-9068-a774ac34df3d"
+    },
+    {
+      "id": "df8de677-0895-4368-8109-b0c501bce449",
+      "name": "Grupo Alaruz- Migración de correos",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/df8de677-0895-4368-8109-b0c501bce449"
+    },
+    {
+      "id": "8d99185c-ad9d-452a-b4f2-6e953a00e099",
+      "name": "PJENL",
+      "description": "Hub para los proyectos del cliente Poder Judicial de Nuevo León.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8d99185c-ad9d-452a-b4f2-6e953a00e099"
+    },
+    {
+      "id": "87c634c0-17db-4c45-a6f2-19a940082eb9",
+      "name": "Ho-Ho Connect",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/87c634c0-17db-4c45-a6f2-19a940082eb9"
+    },
+    {
+      "id": "b5730e12-c905-427c-a838-8c7851f0dd8f",
+      "name": "IEEM",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b5730e12-c905-427c-a838-8c7851f0dd8f"
+    },
+    {
+      "id": "bf9b1a48-3d6e-447e-8a61-d4a7e87964fa",
+      "name": "Development Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/bf9b1a48-3d6e-447e-8a61-d4a7e87964fa"
+    },
+    {
+      "id": "f5152372-f09b-4737-a1de-57c219b96f3f",
+      "name": "Visitas a clientes",
+      "description": "Proyecto para trackear el cumplimiento de la meta de visitas a clientes por concepto de iNBest days, trainings y POCs.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f5152372-f09b-4737-a1de-57c219b96f3f"
+    },
+    {
+      "id": "0bf29f9b-b6bf-4956-a73d-0da266e50825",
+      "name": "MAVI - Modernización Aplicativo",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0bf29f9b-b6bf-4956-a73d-0da266e50825"
+    },
+    {
+      "id": "cace3cd2-b8d6-4e18-b35a-30c95dfa63b0",
+      "name": "Airoom Mini Panel",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cace3cd2-b8d6-4e18-b35a-30c95dfa63b0"
+    },
+    {
+      "id": "aa0185a4-d04e-4c0c-a531-e5e52991feff",
+      "name": "DonkeyBot- Chatbot IPN",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/aa0185a4-d04e-4c0c-a531-e5e52991feff"
+    },
+    {
+      "id": "30b87e69-f4fc-4efd-b639-1f6d95f86ca9",
+      "name": "Roomie-it - Consultoría red Profuturo",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/30b87e69-f4fc-4efd-b639-1f6d95f86ca9"
+    },
+    {
+      "id": "7a1b0908-52a2-444e-bf61-ba7eda5371d4",
+      "name": "Red Ambiental - Capa de Integración",
+      "description": "Migración de servicios Unigis, Phoenix, Reenvío de Facturas y Remisión Digital a la nube.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7a1b0908-52a2-444e-bf61-ba7eda5371d4"
+    },
+    {
+      "id": "c8a8b5ef-9bc7-459a-b9f6-50da9673604d",
+      "name": "Prueba",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c8a8b5ef-9bc7-459a-b9f6-50da9673604d"
+    },
+    {
+      "id": "7307d176-a1bb-48f2-aa75-1b3c08e9fddb",
+      "name": "Dalton - Migración",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7307d176-a1bb-48f2-aa75-1b3c08e9fddb"
+    },
+    {
+      "id": "4e53be24-c90d-459a-9b6c-601fcfbfe3cb",
+      "name": "SF Consultoría - Chatbot",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4e53be24-c90d-459a-9b6c-601fcfbfe3cb"
+    },
+    {
+      "id": "4425bf6a-b3c9-4fb9-9ada-fefd607c250e",
+      "name": "Profitline - ETL",
+      "description": "Este proyecto consiste en la implementación de la herramienta ETL AWS Glue para el procesamiento de datos depositados en un repositorio de AWS para luego cargarlos en una base de datos en Azure.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4425bf6a-b3c9-4fb9-9ada-fefd607c250e"
+    },
+    {
+      "id": "463d7846-40e1-4485-aaf3-5abe5be15362",
+      "name": "CIMA - SAP e Interfaces",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/463d7846-40e1-4485-aaf3-5abe5be15362"
+    },
+    {
+      "id": "10ccfd62-e28e-4677-a45f-d2bd6b692f7a",
+      "name": "Terminal Creativa - LP",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/10ccfd62-e28e-4677-a45f-d2bd6b692f7a"
+    },
+    {
+      "id": "74f892e4-bf50-4a2c-8fb6-4e2f31c76f47",
+      "name": "Cybersecurity Hub",
+      "description": "Seguimiento de actividades generales del área de ciberseguridad.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/74f892e4-bf50-4a2c-8fb6-4e2f31c76f47"
+    },
+    {
+      "id": "6c05e2b9-d351-4ef7-988c-cf233654a405",
+      "name": "Protexa - RFP Microsoft 365 y AD",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6c05e2b9-d351-4ef7-988c-cf233654a405"
+    },
+    {
+      "id": "c5be016c-ce2f-4235-b4e4-9da7c8fc2f60",
+      "name": "Happy Coast - CRM",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c5be016c-ce2f-4235-b4e4-9da7c8fc2f60"
+    },
+    {
+      "id": "b84e3c2b-fde2-48b3-938a-987ae29aba58",
+      "name": "TLC- Soporte",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b84e3c2b-fde2-48b3-938a-987ae29aba58"
+    },
+    {
+      "id": "99727288-0e00-41aa-af77-4a0de441093f",
+      "name": "PerfectBuy",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/99727288-0e00-41aa-af77-4a0de441093f"
+    },
+    {
+      "id": "1543b66b-35c9-4f14-bc1e-3831cabd877b",
+      "name": "Hermosillo-PoC Zoho CRM",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/1543b66b-35c9-4f14-bc1e-3831cabd877b"
+    },
+    {
+      "id": "4d7518fe-a1b3-4d7a-8050-4a51c98564a0",
+      "name": "Nadro - Macrosolped 3.0",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4d7518fe-a1b3-4d7a-8050-4a51c98564a0"
+    },
+    {
+      "id": "b6a4d80c-0146-44c8-8df4-f6569e422674",
+      "name": "Toka- Migración",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b6a4d80c-0146-44c8-8df4-f6569e422674"
+    },
+    {
+      "id": "402d2042-2b4d-4339-8949-ad4ce47f6107",
+      "name": "Haasler - ERP",
+      "description": "ERP a la medida desarrollado para Haasler",
+      "url": "https://dev.azure.com/inbest/_apis/projects/402d2042-2b4d-4339-8949-ad4ce47f6107"
+    },
+    {
+      "id": "3a3fcefa-4bcd-46e7-812d-f89d46de4173",
+      "name": "DMX-  DRP App Services y APIM",
+      "description": "{\"tags\": [\"Cloud\", \"JaimeReyes\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/3a3fcefa-4bcd-46e7-812d-f89d46de4173"
+    },
+    {
+      "id": "60678a61-1254-4f5b-ba83-815eba9ea93d",
+      "name": "Traxion-Migracion Azure POC",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/60678a61-1254-4f5b-ba83-815eba9ea93d"
+    },
+    {
+      "id": "6e29e9eb-9a48-4a64-9717-7f71c61824a2",
+      "name": "GML - Ecommerce Accesorios",
+      "description": "Proyecto Ecommerce accesorios",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6e29e9eb-9a48-4a64-9717-7f71c61824a2"
+    },
+    {
+      "id": "0e21d9f6-c879-4b9f-ada5-0b8ba2527bb5",
+      "name": "RAC",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0e21d9f6-c879-4b9f-ada5-0b8ba2527bb5"
+    },
+    {
+      "id": "69aa1479-d3b7-4250-8602-05171e107436",
+      "name": "Piel Chinita - CRM",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/69aa1479-d3b7-4250-8602-05171e107436"
+    },
+    {
+      "id": "7e2975d0-a052-4f4f-9430-18777a266bf8",
+      "name": "CocaCola-Andina-Data Laye",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7e2975d0-a052-4f4f-9430-18777a266bf8"
+    },
+    {
+      "id": "a90022d6-0373-4086-bd94-21e7df4fa1f1",
+      "name": "JAC Shop",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a90022d6-0373-4086-bd94-21e7df4fa1f1"
+    },
+    {
+      "id": "d0283c5b-c125-4cba-a7cc-59f4c3853361",
+      "name": "BPM (Buen Paso Media) - WordPress",
+      "description": "Desarrollo y soporte a Sitios WordPress\niNBest + BWD Asignación",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d0283c5b-c125-4cba-a7cc-59f4c3853361"
+    },
+    {
+      "id": "f9eabe11-8700-4f9a-8fe6-46a6fbaa5e0a",
+      "name": "Haasler - Laboratorio",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f9eabe11-8700-4f9a-8fe6-46a6fbaa5e0a"
+    },
+    {
+      "id": "f21d0467-e112-4b63-a0b7-0cd4af055e01",
+      "name": "SIF- Sincronización de Directorios",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/f21d0467-e112-4b63-a0b7-0cd4af055e01"
+    },
+    {
+      "id": "93808bf0-0960-4b90-83e4-4415475e6e46",
+      "name": "Project Test Nocedal",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/93808bf0-0960-4b90-83e4-4415475e6e46"
+    },
+    {
+      "id": "bc41a470-f827-46af-a554-459bab1aff68",
+      "name": "Lipu Traffilog - HS_38286298156",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/bc41a470-f827-46af-a554-459bab1aff68"
+    },
+    {
+      "id": "572766c1-042b-4d1d-95cb-cc0fac563fc9",
+      "name": "Customer Experience Hub",
+      "description": "Proyecto Interno - Data",
+      "url": "https://dev.azure.com/inbest/_apis/projects/572766c1-042b-4d1d-95cb-cc0fac563fc9"
+    },
+    {
+      "id": "0ac633c0-acd4-49e7-874d-7ec224ad7c1d",
+      "name": "Manpower-Migración Chatbot",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0ac633c0-acd4-49e7-874d-7ec224ad7c1d"
+    },
+    {
+      "id": "51da9cd0-d89a-45c6-855d-b755188198e9",
+      "name": "ISO 20000",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/51da9cd0-d89a-45c6-855d-b755188198e9"
+    },
+    {
+      "id": "8b558137-d6b3-4f73-bb38-313e74aae18f",
+      "name": "EP de México",
+      "description": "Hub para el proyecto actual y futuros, del cliente EP de México.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8b558137-d6b3-4f73-bb38-313e74aae18f"
+    },
+    {
+      "id": "b2d070a5-f5e8-4859-901f-5cbdfaf703ac",
+      "name": "Facturación  AWS",
+      "description": "Proyecto interno",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b2d070a5-f5e8-4859-901f-5cbdfaf703ac"
+    },
+    {
+      "id": "a0af00f6-1bf4-4be8-a31e-f9e62f19fee5",
+      "name": "Easytrip - Guidanceplex",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a0af00f6-1bf4-4be8-a31e-f9e62f19fee5"
+    },
+    {
+      "id": "754e0985-2f6d-49bd-b739-a42ef822e806",
+      "name": "Mareva - DRP",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/754e0985-2f6d-49bd-b739-a42ef822e806"
+    },
+    {
+      "id": "c3a84d51-1635-4bdb-9363-a31f7d34deae",
+      "name": "Project Management Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c3a84d51-1635-4bdb-9363-a31f7d34deae"
+    },
+    {
+      "id": "a58764bd-2061-4f08-a0dc-caa4465be350",
+      "name": "Software Factory Hub",
+      "description": "En este Hub se podrán gestionar las actividades relacionadas al área de Software Factory",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a58764bd-2061-4f08-a0dc-caa4465be350"
+    },
+    {
+      "id": "7e03cf5d-b6d7-4a90-96b8-4d805e583588",
+      "name": "Ultra Labs - Dashboard",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7e03cf5d-b6d7-4a90-96b8-4d805e583588"
+    },
+    {
+      "id": "e7fe0b98-09f4-4458-b67d-64f4396ee53e",
+      "name": "GML - ETL Botmaker",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e7fe0b98-09f4-4458-b67d-64f4396ee53e"
+    },
+    {
+      "id": "617df641-b5ef-4233-a524-eef2340d589c",
+      "name": "Farmacias YZA - Dashboards",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/617df641-b5ef-4233-a524-eef2340d589c"
+    },
+    {
+      "id": "46b4da8f-d0c3-48e4-9917-6eb67a30084e",
+      "name": "GML- Soporte",
+      "description": "{\"tags\": [\"SoftwareFactory\", \"LuisNocedal\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/46b4da8f-d0c3-48e4-9917-6eb67a30084e"
+    },
+    {
+      "id": "cae81d96-99a4-46aa-bd84-dd68c13560b0",
+      "name": "LEONEM- Migración",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cae81d96-99a4-46aa-bd84-dd68c13560b0"
+    },
+    {
+      "id": "d5d43724-e80a-490b-b143-bf389c92c9bf",
+      "name": "Onboarding - RH -UXUI",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d5d43724-e80a-490b-b143-bf389c92c9bf"
+    },
+    {
+      "id": "205f66fb-8163-4507-8781-a8441b916261",
+      "name": "Tiendas 3B",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/205f66fb-8163-4507-8781-a8441b916261"
+    },
+    {
+      "id": "3063031c-a3d0-428b-8b0a-adb60d4225f6",
+      "name": "Proan Chatbot RH",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/3063031c-a3d0-428b-8b0a-adb60d4225f6"
+    },
+    {
+      "id": "0e360f9c-cd36-4bf9-a9a4-8b457a63e993",
+      "name": "CRM Innovación",
+      "description": "CRM Paquetizado\nProyecto interno de área de innovación",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0e360f9c-cd36-4bf9-a9a4-8b457a63e993"
+    },
+    {
+      "id": "886a730d-044b-4be7-acdf-b4aaec881064",
+      "name": "Cooper-Soporte",
+      "description": "Soporte a implementaciones Cooper\nMRO\nERSL\n\nBWD+iNBest",
+      "url": "https://dev.azure.com/inbest/_apis/projects/886a730d-044b-4be7-acdf-b4aaec881064"
+    },
+    {
+      "id": "fcfab600-02c3-4b1c-a691-47dddb2faca7",
+      "name": "Pastelería Marisa- Migración",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fcfab600-02c3-4b1c-a691-47dddb2faca7"
+    },
+    {
+      "id": "012f77cc-d4fd-4279-93dc-40c19b815de8",
+      "name": "Traxion - Chatbot",
+      "description": "Chatbot paquetizado.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/012f77cc-d4fd-4279-93dc-40c19b815de8"
+    },
+    {
+      "id": "2f232929-e5a5-463c-8315-bab25ea1cc39",
+      "name": "Area de EdgeCloud",
+      "description": "Sitio para el seguimiento de las actividades OKRs del área EdgeCloud",
+      "url": "https://dev.azure.com/inbest/_apis/projects/2f232929-e5a5-463c-8315-bab25ea1cc39"
+    },
+    {
+      "id": "635b68f8-f2fc-4646-b7cb-2ced431afd18",
+      "name": "Nanny - App Web",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/635b68f8-f2fc-4646-b7cb-2ced431afd18"
+    },
+    {
+      "id": "a7775c61-a505-4d2d-a138-0ab5ec58b4aa",
+      "name": "Calux - Punto de Venta",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a7775c61-a505-4d2d-a138-0ab5ec58b4aa"
+    },
+    {
+      "id": "64795a67-13b5-4158-b88c-a755b78b1bb4",
+      "name": "IEEM - Proceso digitalizacion Prep 2024",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/64795a67-13b5-4158-b88c-a755b78b1bb4"
+    },
+    {
+      "id": "ee64bafe-6458-4e66-880b-a13f5ea178ac",
+      "name": "GML - Sitio Web",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ee64bafe-6458-4e66-880b-a13f5ea178ac"
+    },
+    {
+      "id": "097219cb-5421-4ddf-a500-810bcca1dfaf",
+      "name": "115 Grados",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/097219cb-5421-4ddf-a500-810bcca1dfaf"
+    },
+    {
+      "id": "3522ca30-efd7-485e-a6e6-7024590e33cd",
+      "name": "AWS Financial Services Competency",
+      "description": "Archivos del proyecto en Sitio de colaboración:\nhttps://inbest.sharepoint.com/:f:/s/iNBestCloud/EoxzTT4ZKlNBk_lFfrK8GjIBolYFCXNbx4ER8hxvvsLcqw?e=VxDziz",
+      "url": "https://dev.azure.com/inbest/_apis/projects/3522ca30-efd7-485e-a6e6-7024590e33cd"
+    },
+    {
+      "id": "8f126416-e291-40bd-9d8f-2f9fd69095c9",
+      "name": "INBest Core-MRO Innovación",
+      "description": "Proyecto interno iNBest\nInnovación",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8f126416-e291-40bd-9d8f-2f9fd69095c9"
+    },
+    {
+      "id": "2b453923-8259-4dea-9df0-bfd614338396",
+      "name": "Roomie-it Poliza Change Management AWS",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/2b453923-8259-4dea-9df0-bfd614338396"
+    },
+    {
+      "id": "d05b29fa-d041-4ed3-b5ed-0b44b3e2f3f1",
+      "name": "Farmacias San Pablo - API Facebook",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d05b29fa-d041-4ed3-b5ed-0b44b3e2f3f1"
+    },
+    {
+      "id": "94dbd40c-9a8b-45f6-8383-2435c2d2678f",
+      "name": "Repstronics - ERP",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/94dbd40c-9a8b-45f6-8383-2435c2d2678f"
+    },
+    {
+      "id": "fa6f287d-9b3d-4f2a-b81a-828296d18987",
+      "name": "Sanchez y Martinez - Migración PAXIS",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fa6f287d-9b3d-4f2a-b81a-828296d18987"
+    },
+    {
+      "id": "05daa17d-49b8-4fa8-986e-bbe77bd61ae1",
+      "name": "Cooper-MRO20",
+      "description": "Versión 2.0 de proyecto MRO Cooper. {\"tags\": [\"Innovation\", \"EfrainGarcia\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/05daa17d-49b8-4fa8-986e-bbe77bd61ae1"
+    },
+    {
+      "id": "2e72a78b-7426-4819-8901-8d9129becc2d",
+      "name": "Nadro Middelware",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/2e72a78b-7426-4819-8901-8d9129becc2d"
+    },
+    {
+      "id": "bc869ddd-46de-46f3-a62b-304961c8b91e",
+      "name": "HOHO DASHBOARD",
+      "description": "creación de tableros analitycs y redes sociales",
+      "url": "https://dev.azure.com/inbest/_apis/projects/bc869ddd-46de-46f3-a62b-304961c8b91e"
+    },
+    {
+      "id": "03d646df-34ff-4804-96b2-1003f94e9e89",
+      "name": "Grupo Guias - Multicotizador de Seguros",
+      "description": "El proyecto consiste en el desarrollo de una aplicación web para el Grupo Guías, diseñada como un multicotizador de seguros de vehículos. La aplicación permite a los agentes de seguros cotizar y emitir pólizas de manera eficiente y en tiempo real. Incluye funcionalidades clave como la integración con web services de aseguradoras, un sistema de gestión de usuarios y roles, y herramientas de seguimiento post-venta como un módulo de tickets. Además, incorpora un diseño de interfaz de usuario intuitivo y un backend robusto para garantizar la seguridad y el rendimiento del sistema. El objetivo del proyecto es optimizar el proceso de cotización de seguros, mejorando la experiencia del usuario y la eficiencia operativa de los agentes.\n{\"tags\": [\"SoftwareFactory\", \"EduardoFelix\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/03d646df-34ff-4804-96b2-1003f94e9e89"
+    },
+    {
+      "id": "ae27abc8-58f5-497d-bf90-0d55272f7f77",
+      "name": "Cooper Renovación Transportes RH",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ae27abc8-58f5-497d-bf90-0d55272f7f77"
+    },
+    {
+      "id": "a15cfd6b-9bef-4efa-bf26-0c9f5b53d637",
+      "name": "Fiscalía BC - Open Search",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a15cfd6b-9bef-4efa-bf26-0c9f5b53d637"
+    },
+    {
+      "id": "ba25849c-92c9-4e27-aede-c2a31f419998",
+      "name": "Tiendas 3B - APIM WAF",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ba25849c-92c9-4e27-aede-c2a31f419998"
+    },
+    {
+      "id": "a50f1645-b960-4b04-bd9f-4363fc52995c",
+      "name": "DevOps Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a50f1645-b960-4b04-bd9f-4363fc52995c"
+    },
+    {
+      "id": "06839244-ef0d-430f-b1aa-155da76c5254",
+      "name": "Masterfan - Data_BI",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/06839244-ef0d-430f-b1aa-155da76c5254"
+    },
+    {
+      "id": "baf81fd0-489a-41b7-9080-4beef9e68f12",
+      "name": "Data AI Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/baf81fd0-489a-41b7-9080-4beef9e68f12"
+    },
+    {
+      "id": "fb20be0f-06f1-41a7-9133-ef1915cb3ead",
+      "name": "Giant Motors - CRM",
+      "description": "{\"tags\": [\"SoftwareFactory\", \"LuisNocedal\"]}",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fb20be0f-06f1-41a7-9133-ef1915cb3ead"
+    },
+    {
+      "id": "1781a90d-8034-47dd-8ee2-4e2c0c3118c4",
+      "name": "Porsche - Tableros PowerBI",
+      "description": "Este proyecto consiste en la implementación de tableros en PowerBI sobre su escritorio remoto para construcción de indicadores de sus inventarios de toda la red, facturaciones y detalles de las unidades de los concesionarios.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/1781a90d-8034-47dd-8ee2-4e2c0c3118c4"
+    },
+    {
+      "id": "e3d55112-02a1-4ae8-a638-c17d655d2d0b",
+      "name": "Migración a Azure DevOps",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e3d55112-02a1-4ae8-a638-c17d655d2d0b"
+    },
+    {
+      "id": "0cd82db7-d0d7-4186-8452-2b5b55263fbb",
+      "name": "Médica Sur",
+      "description": "Hub para el cliente Médica Sur donde se resguardarán futuros proyectos",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0cd82db7-d0d7-4186-8452-2b5b55263fbb"
+    },
+    {
+      "id": "6ff6c5f3-f3d4-4761-84d4-70302efc37be",
+      "name": "Ocean Medic -Ecosistema Ai",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6ff6c5f3-f3d4-4761-84d4-70302efc37be"
+    },
+    {
+      "id": "44102aaf-4bb3-490c-b032-89ff0d9ee5e6",
+      "name": "Servnet - SAP",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/44102aaf-4bb3-490c-b032-89ff0d9ee5e6"
+    },
+    {
+      "id": "abf1695c-1473-494e-a0cb-2e78da329094",
+      "name": "Multiva - Workspaces",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/abf1695c-1473-494e-a0cb-2e78da329094"
+    },
+    {
+      "id": "898e80cb-966d-4af9-b351-1f8530723d93",
+      "name": "iNBest-365",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/898e80cb-966d-4af9-b351-1f8530723d93"
+    },
+    {
+      "id": "e0d0987e-26aa-4f6c-9b94-4b53d1075e7b",
+      "name": "Oleomex",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e0d0987e-26aa-4f6c-9b94-4b53d1075e7b"
+    },
+    {
+      "id": "3322092e-8d99-4520-9a18-a8956a14ad46",
+      "name": "Estafeta-APIM Región Secundaria",
+      "description": "Implementación infraestructura necesaria para APIM Región Secundaria",
+      "url": "https://dev.azure.com/inbest/_apis/projects/3322092e-8d99-4520-9a18-a8956a14ad46"
+    },
+    {
+      "id": "5335e0d7-ee41-4836-8a0b-ef3b7de5e0aa",
+      "name": "Gob michoacan - Infraestrcutura y bot GPT",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/5335e0d7-ee41-4836-8a0b-ef3b7de5e0aa"
+    },
+    {
+      "id": "b320c3e0-7ed2-4c58-a4e0-53d37a72b1fd",
+      "name": "Impotrade",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b320c3e0-7ed2-4c58-a4e0-53d37a72b1fd"
+    },
+    {
+      "id": "6e6ad400-12b0-404d-a364-01601dff7f4d",
+      "name": "Yo Contigo - Migración Elastic Search",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/6e6ad400-12b0-404d-a364-01601dff7f4d"
+    },
+    {
+      "id": "703cb270-3f0d-4a04-a365-132bc1999a2b",
+      "name": "Unión de Tula",
+      "description": "Web y App",
+      "url": "https://dev.azure.com/inbest/_apis/projects/703cb270-3f0d-4a04-a365-132bc1999a2b"
+    },
+    {
+      "id": "60e44309-bafc-4405-96ee-e1a59e74a3ad",
+      "name": "Hermosillo Data Lake - NC",
+      "description": "Proyecto para despliegue de nuevos componentes generados por los clientes como codigo (IaC).",
+      "url": "https://dev.azure.com/inbest/_apis/projects/60e44309-bafc-4405-96ee-e1a59e74a3ad"
+    },
+    {
+      "id": "62524932-6348-4537-a99e-ecbeccfa7d7f",
+      "name": "MSP Hub",
+      "description": "https://github.com/iNBest-cloud/iNBest-MSP_KB0723",
+      "url": "https://dev.azure.com/inbest/_apis/projects/62524932-6348-4537-a99e-ecbeccfa7d7f"
+    },
+    {
+      "id": "8ae6034d-8d18-494f-a272-ed641a7787ef",
+      "name": "Billing GCP",
+      "description": "Proyecto Interno",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8ae6034d-8d18-494f-a272-ed641a7787ef"
+    },
+    {
+      "id": "850ec27c-0d02-45b5-b35f-e60f1e709940",
+      "name": "Sacbe Multicurrency - Levantamiento de servidores",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/850ec27c-0d02-45b5-b35f-e60f1e709940"
+    },
+    {
+      "id": "b2e787f6-78c6-47cb-9301-d1b4089c4044",
+      "name": "CAF- Sincronización AD",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b2e787f6-78c6-47cb-9301-d1b4089c4044"
+    },
+    {
+      "id": "ea50609f-86bd-44de-82e9-533455ff6336",
+      "name": "WWF - Chatbot",
+      "description": "Integración con Google Sheets ",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ea50609f-86bd-44de-82e9-533455ff6336"
+    },
+    {
+      "id": "e7de6f9f-4e4e-4216-bd97-7da529b704c5",
+      "name": "JAC Fichas Tecnicas",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e7de6f9f-4e4e-4216-bd97-7da529b704c5"
+    },
+    {
+      "id": "76a18541-99d6-4de7-ab37-753cff782562",
+      "name": "Guntner-IOT Portal",
+      "description": "Sitio administrador de lecturas de dispositivos IOT+Smart Machines\nBig Wave Data + iNBest",
+      "url": "https://dev.azure.com/inbest/_apis/projects/76a18541-99d6-4de7-ab37-753cff782562"
+    },
+    {
+      "id": "573e1d5e-5940-405d-9162-f4f453e49d0f",
+      "name": "Ecodeli - OC",
+      "description": "Proyecto de optimización de costos",
+      "url": "https://dev.azure.com/inbest/_apis/projects/573e1d5e-5940-405d-9162-f4f453e49d0f"
+    },
+    {
+      "id": "553318a0-865a-43dd-b7c6-6594269d9e8d",
+      "name": "Nemak -HR HUB Sharepoint",
+      "description": "HR HUB Sharepoint\niNBest + BWD Asignación",
+      "url": "https://dev.azure.com/inbest/_apis/projects/553318a0-865a-43dd-b7c6-6594269d9e8d"
+    },
+    {
+      "id": "4dadac7c-c3f9-4046-a5b7-c7fb4040d5a9",
+      "name": "Su Karne",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4dadac7c-c3f9-4046-a5b7-c7fb4040d5a9"
+    },
+    {
+      "id": "d57b4033-9ff8-4ce0-9373-0c8dcaf09ea6",
+      "name": "Lanzacreto- Migración de buzones",
+      "description": "El lead tiene licenciamiento Office 2019, y tiene 8 buzones de correo en Cpanel",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d57b4033-9ff8-4ce0-9373-0c8dcaf09ea6"
+    },
+    {
+      "id": "72e6ddfa-f840-4ae9-99f0-20891d7c0f0d",
+      "name": "iNBest-Azure Lighthouse implementation",
+      "description": "Servicio de administración de servicios en la nube de Microsoft Azure que permite a los proveedores de servicios administrados (MSP) gestionar de manera centralizada los servicios en la nube de múltiples clientes desde una única interfaz.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/72e6ddfa-f840-4ae9-99f0-20891d7c0f0d"
+    },
+    {
+      "id": "aa05f2b7-6528-46c0-983c-9b2209c2495f",
+      "name": "Pegaduro",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/aa05f2b7-6528-46c0-983c-9b2209c2495f"
+    },
+    {
+      "id": "9e628be3-8b23-4501-b4f4-64fb9e87df08",
+      "name": "SEJAL - App",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/9e628be3-8b23-4501-b4f4-64fb9e87df08"
+    },
+    {
+      "id": "86f548bd-92c3-4f15-960c-cbdd7326dd2c",
+      "name": "Implementación de IaC con Terraform desde Repositorio GitHub",
+      "description": "Proyecto Interno",
+      "url": "https://dev.azure.com/inbest/_apis/projects/86f548bd-92c3-4f15-960c-cbdd7326dd2c"
+    },
+    {
+      "id": "727431e3-9dcf-47ec-b615-295747749855",
+      "name": "Finasist - DRP",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/727431e3-9dcf-47ec-b615-295747749855"
+    },
+    {
+      "id": "2f939b8d-1eb6-4d75-8cb7-fda340c9effc",
+      "name": "Woodward - Migración de servidores",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/2f939b8d-1eb6-4d75-8cb7-fda340c9effc"
+    },
+    {
+      "id": "7f3ee947-46bb-49d8-9c5b-2eb8b7aa7abd",
+      "name": "PTV Group - Workspaces",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7f3ee947-46bb-49d8-9c5b-2eb8b7aa7abd"
+    },
+    {
+      "id": "76b33892-7e25-40ba-91f7-4a8f089e709e",
+      "name": "Manpower-Chatbot",
+      "description": "Restauración de chatbot",
+      "url": "https://dev.azure.com/inbest/_apis/projects/76b33892-7e25-40ba-91f7-4a8f089e709e"
+    },
+    {
+      "id": "c1deadb5-272f-4fb1-a64b-5c937cb5b366",
+      "name": "Needed - Auditoría de seguridad - HS_41147625346",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c1deadb5-272f-4fb1-a64b-5c937cb5b366"
+    },
+    {
+      "id": "73792cc3-89f1-423c-b13e-5a214b6cf17e",
+      "name": "HDI Seguros - Backups de infraestructura",
+      "description": "Backups de infraestructura",
+      "url": "https://dev.azure.com/inbest/_apis/projects/73792cc3-89f1-423c-b13e-5a214b6cf17e"
+    },
+    {
+      "id": "b6fe48c4-0763-4ca2-acbe-80db9a5e5303",
+      "name": "Grupo Promax-Soporte",
+      "description": "Soporte a sitios Grupo Promax\nFundación Promax\nfundacionpromax.org\nHarzoxid\nPanel Rey\nPlaforama\nPermabase\nPromax Challenge\nSteeldust\nSupermastick\nTermofiber\nTurkmex\nWSP\nYesera\nZinc Nacional\n\nBWD + iNBest",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b6fe48c4-0763-4ca2-acbe-80db9a5e5303"
+    },
+    {
+      "id": "c2627d1f-aa1a-45ef-8cfd-982c0895dc7e",
+      "name": "CAF- Migración de Dominio",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c2627d1f-aa1a-45ef-8cfd-982c0895dc7e"
+    },
+    {
+      "id": "9518c26e-d461-480e-8b96-4eea41750040",
+      "name": "Golstech",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/9518c26e-d461-480e-8b96-4eea41750040"
+    },
+    {
+      "id": "33df0a35-f6b7-4f01-98fa-ffd9f5e3c696",
+      "name": "JAC BOT",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/33df0a35-f6b7-4f01-98fa-ffd9f5e3c696"
+    },
+    {
+      "id": "bdc690d2-23dc-47e9-bb76-956ed02140bf",
+      "name": "Hub Modern Work",
+      "description": "Proyectos de Migración exclusivamente enfocados en Modern Work",
+      "url": "https://dev.azure.com/inbest/_apis/projects/bdc690d2-23dc-47e9-bb76-956ed02140bf"
+    },
+    {
+      "id": "ebd694ce-61b2-4362-b197-10194231f981",
+      "name": "Acit global - Soporte aplicativos",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ebd694ce-61b2-4362-b197-10194231f981"
+    },
+    {
+      "id": "c9d03bf8-7aea-4ddd-a55e-731c72eee103",
+      "name": "H52 - AWS Lookout for vision",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c9d03bf8-7aea-4ddd-a55e-731c72eee103"
+    },
+    {
+      "id": "8a5c0958-9b3f-4333-b2eb-aed082638676",
+      "name": "Helfon",
+      "description": "Hub para el proyecto de \"Migración de AWS WorkDocs a Google Drive\" del cliente Helfon",
+      "url": "https://dev.azure.com/inbest/_apis/projects/8a5c0958-9b3f-4333-b2eb-aed082638676"
+    },
+    {
+      "id": "cb918982-4bbd-413d-adef-0fdf1bea76c7",
+      "name": "Nufi",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cb918982-4bbd-413d-adef-0fdf1bea76c7"
+    },
+    {
+      "id": "1ebcc438-a0bd-468a-8ae3-ef04fbb55c81",
+      "name": "Blumonpay",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/1ebcc438-a0bd-468a-8ae3-ef04fbb55c81"
+    },
+    {
+      "id": "9c6156f4-350b-46e8-a09a-85f5af5aad7c",
+      "name": "Guntner-Chatbot",
+      "description": "Chatbot integrado a Teams",
+      "url": "https://dev.azure.com/inbest/_apis/projects/9c6156f4-350b-46e8-a09a-85f5af5aad7c"
+    },
+    {
+      "id": "27f10e3d-5ffc-4786-9d34-d3d3f24021e8",
+      "name": "Zertuche - Sitio Web",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/27f10e3d-5ffc-4786-9d34-d3d3f24021e8"
+    },
+    {
+      "id": "bff979e2-38fc-41a9-b548-b20682dc475d",
+      "name": "iNBest-Facturación Amazon",
+      "description": "Dashboard de facturación Amazon",
+      "url": "https://dev.azure.com/inbest/_apis/projects/bff979e2-38fc-41a9-b548-b20682dc475d"
+    },
+    {
+      "id": "c4ef25f5-2377-4e48-b0c9-6d195850b1f2",
+      "name": "Happy Coast - Web",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c4ef25f5-2377-4e48-b0c9-6d195850b1f2"
+    },
+    {
+      "id": "9b376b6d-dba1-4867-b10b-0363937e0fce",
+      "name": "Redpack",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/9b376b6d-dba1-4867-b10b-0363937e0fce"
+    },
+    {
+      "id": "c681d9db-5f7f-4e9d-9adc-4be82d7d1330",
+      "name": "INE - Migración Chatbot",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c681d9db-5f7f-4e9d-9adc-4be82d7d1330"
+    },
+    {
+      "id": "9f0bafff-135a-4635-b722-da0e593bad15",
+      "name": "Toka_SAP-Dashboard",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/9f0bafff-135a-4635-b722-da0e593bad15"
+    },
+    {
+      "id": "4884784b-8c24-4c70-b1e9-c6ca359c67c4",
+      "name": "Ejemplo Hub",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4884784b-8c24-4c70-b1e9-c6ca359c67c4"
+    },
+    {
+      "id": "180a7977-0405-4228-ba94-084ac6e96144",
+      "name": "Roomie IT - Looker BI",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/180a7977-0405-4228-ba94-084ac6e96144"
+    },
+    {
+      "id": "e396bef6-56f8-4013-af1c-d87ef944e8dc",
+      "name": "Chatbot Innovación",
+      "description": "Chatbot paquetizado\nProyecto interno de área de Innovación",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e396bef6-56f8-4013-af1c-d87ef944e8dc"
+    },
+    {
+      "id": "887e5ba1-5ffa-4057-b142-a4c5d272fe68",
+      "name": "Arena Cancún- Migración",
+      "description": "Migración de Google Workspace",
+      "url": "https://dev.azure.com/inbest/_apis/projects/887e5ba1-5ffa-4057-b142-a4c5d272fe68"
+    },
+    {
+      "id": "e7587460-f668-455d-8b41-314bff89e339",
+      "name": "SIF- Migración de directorios",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e7587460-f668-455d-8b41-314bff89e339"
+    },
+    {
+      "id": "d0de5f01-e426-45a0-ade9-ceeaed7d614d",
+      "name": "Scrum Master HUB",
+      "description": "Apartado - Scrum master",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d0de5f01-e426-45a0-ade9-ceeaed7d614d"
+    },
+    {
+      "id": "e3a4b204-bbbc-490f-bf80-ce18d28ead30",
+      "name": "Data Analytics Hub",
+      "description": "Proyecto interno para el equipo de Data Analytics.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e3a4b204-bbbc-490f-bf80-ce18d28ead30"
+    },
+    {
+      "id": "7e3dd118-6ee8-49f6-b2d6-99e416c773da",
+      "name": "PAPNNA",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7e3dd118-6ee8-49f6-b2d6-99e416c773da"
+    },
+    {
+      "id": "93354c8a-506b-4ed1-b809-f49151dbd563",
+      "name": "Innovation Hub",
+      "description": "En este Hub se podrán gestionar las actividades relacionadas al área de Innovation.",
+      "url": "https://dev.azure.com/inbest/_apis/projects/93354c8a-506b-4ed1-b809-f49151dbd563"
+    },
+    {
+      "id": "a713e329-60c7-463d-9078-a5cde56d9c4e",
+      "name": "Ultra Labs - Migración SAP",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a713e329-60c7-463d-9078-a5cde56d9c4e"
+    },
+    {
+      "id": "7bed4376-79f6-46c3-845b-8c7a28dbb5e8",
+      "name": "Profuturo - Migraciones",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7bed4376-79f6-46c3-845b-8c7a28dbb5e8"
+    },
+    {
+      "id": "58c62fa3-fd3b-499a-aea4-c36974e2013d",
+      "name": "Banakya",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/58c62fa3-fd3b-499a-aea4-c36974e2013d"
+    },
+    {
+      "id": "4dcb20b9-0b6d-4c65-a4ad-5183ba4a300f",
+      "name": "Lipu - Poliza Data - HS_36039468970",
+      "description": "Lipu Data Lake",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4dcb20b9-0b6d-4c65-a4ad-5183ba4a300f"
+    },
+    {
+      "id": "17ccab46-c63f-473a-9d1f-c563644435de",
+      "name": "Moto Continental",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/17ccab46-c63f-473a-9d1f-c563644435de"
+    },
+    {
+      "id": "591908b5-427d-439d-9aec-95d3d0ea0e53",
+      "name": "AWS Migration and Modernization Competency",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/591908b5-427d-439d-9aec-95d3d0ea0e53"
+    },
+    {
+      "id": "c6e3515d-c2c8-4a22-8178-026c1f2f3c66",
+      "name": "CONSAR",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/c6e3515d-c2c8-4a22-8178-026c1f2f3c66"
+    },
+    {
+      "id": "e2676243-bff2-49f5-89ed-a41af440d2d0",
+      "name": "Prueba - GML CRM",
+      "description": "Esta es la primera prueba de carga de actividades para GML - CRM",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e2676243-bff2-49f5-89ed-a41af440d2d0"
+    },
+    {
+      "id": "e8bd48f3-dd3a-4ec1-9f6e-1988c59f65bb",
+      "name": "Farmacias YZA - RAF PWA",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e8bd48f3-dd3a-4ec1-9f6e-1988c59f65bb"
+    },
+    {
+      "id": "cb4bc3cd-95d9-41eb-ab67-8554ea14a2f7",
+      "name": "Ho-Ho Datos",
+      "description": "infraestructura de datos",
+      "url": "https://dev.azure.com/inbest/_apis/projects/cb4bc3cd-95d9-41eb-ab67-8554ea14a2f7"
+    },
+    {
+      "id": "04885ee7-22c4-444e-973b-2bfc3b70a238",
+      "name": "Ho-Ho Soporte",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/04885ee7-22c4-444e-973b-2bfc3b70a238"
+    },
+    {
+      "id": "d9536c6d-3015-4ac6-afb9-3473ffa87019",
+      "name": "Nadro-Webscraping - Bolsa de hrs",
+      "description": "Proyecto de bolsa de hrs de nadro",
+      "url": "https://dev.azure.com/inbest/_apis/projects/d9536c6d-3015-4ac6-afb9-3473ffa87019"
+    },
+    {
+      "id": "70238156-be13-40db-9f0b-b754f278e416",
+      "name": "Easytrip - Finanzas-Automatización",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/70238156-be13-40db-9f0b-b754f278e416"
+    },
+    {
+      "id": "a4a22342-2257-4e14-8639-4e8584621b0a",
+      "name": "GML - Requerimientos CRM Flotillas - HS_39869048659",
+      "description": "Nuevos requerimientos para módulo de flotillas en CRM Ventas",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a4a22342-2257-4e14-8639-4e8584621b0a"
+    },
+    {
+      "id": "4f96e49d-eb73-45a2-85f2-4c662fe49096",
+      "name": "Farmacias YZA - Dashboard BI Incentivos",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/4f96e49d-eb73-45a2-85f2-4c662fe49096"
+    },
+    {
+      "id": "791454ec-47a7-4a27-98a6-6cc8822a361b",
+      "name": "SCRUM Hub",
+      "description": "Hub para registrar todas las actividades y esfuerzos destinados al seguimiento de prácticas SCRUM (Planeaciones, Sprint Meetings, etc).",
+      "url": "https://dev.azure.com/inbest/_apis/projects/791454ec-47a7-4a27-98a6-6cc8822a361b"
+    },
+    {
+      "id": "819312ae-efe2-4846-a449-655e997eca58",
+      "name": "Pruebas",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/819312ae-efe2-4846-a449-655e997eca58"
+    },
+    {
+      "id": "ce011c88-3f5c-4d15-ae54-3cfdba10cff6",
+      "name": "Research and Development",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/ce011c88-3f5c-4d15-ae54-3cfdba10cff6"
+    },
+    {
+      "id": "b4cd7d45-0334-40c1-abce-c995b714c14b",
+      "name": "Backend JAC App - GML",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/b4cd7d45-0334-40c1-abce-c995b714c14b"
+    },
+    {
+      "id": "93a75f5a-7d7c-47cb-96ce-0f5f5dc7d5b9",
+      "name": "Industrias de la vega",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/93a75f5a-7d7c-47cb-96ce-0f5f5dc7d5b9"
+    },
+    {
+      "id": "fef2d555-c1b8-4367-bca5-3bab999b8b7b",
+      "name": "IEEM - Proceso digitalización PREP",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fef2d555-c1b8-4367-bca5-3bab999b8b7b"
+    },
+    {
+      "id": "7950a5d8-95cf-4d45-b0c9-26c29fa3d51b",
+      "name": "Cold Terminal - Web App -WMS",
+      "description": "Desarrollo y soporte a Web App WMS\nBWD +iNBest\nAsignación ",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7950a5d8-95cf-4d45-b0c9-26c29fa3d51b"
+    },
+    {
+      "id": "587701a5-457a-47c0-85fe-21528353f5c4",
+      "name": "Project Planning",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/587701a5-457a-47c0-85fe-21528353f5c4"
+    },
+    {
+      "id": "2d3a3b13-659e-43c2-a486-54116d9d21cf",
+      "name": "Grupo Vallas",
+      "description": "Chatbot - Paquetizado",
+      "url": "https://dev.azure.com/inbest/_apis/projects/2d3a3b13-659e-43c2-a486-54116d9d21cf"
+    },
+    {
+      "id": "a36ac4e1-a218-4442-b583-78077267070b",
+      "name": "Gobierno de Michoacán-Axobot 20",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/a36ac4e1-a218-4442-b583-78077267070b"
+    },
+    {
+      "id": "516a0bde-3bef-403f-8ca1-5ac433ea0726",
+      "name": "Fiscalia-Quicksight",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/516a0bde-3bef-403f-8ca1-5ac433ea0726"
+    },
+    {
+      "id": "dc967de9-e113-4b38-bb9a-a0300d678f28",
+      "name": "Efecti Mundo  Auditoria de Infra AWS y Remediaciones",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/dc967de9-e113-4b38-bb9a-a0300d678f28"
+    },
+    {
+      "id": "fa32ef83-7eda-43e1-b2a9-9a0d1378c3da",
+      "name": "Google Cloud Infrastructure - Services Specialization Requiremen",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/fa32ef83-7eda-43e1-b2a9-9a0d1378c3da"
+    },
+    {
+      "id": "62137466-853f-4680-873b-94be04a3f57e",
+      "name": "Guntner-Asignacion Portal de clientes",
+      "description": "Desarrollo y soporte a portal de clientes \nAsignación \nBWD + iNBest ",
+      "url": "https://dev.azure.com/inbest/_apis/projects/62137466-853f-4680-873b-94be04a3f57e"
+    },
+    {
+      "id": "e32e24cb-95e4-4fb2-967c-20ebb14dbcaa",
+      "name": "Haasler Nexus - CRM",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/e32e24cb-95e4-4fb2-967c-20ebb14dbcaa"
+    },
+    {
+      "id": "0a159573-229c-4410-bda8-b86b587b54d4",
+      "name": "GML - Modelos 3D",
+      "description": "",
+      "url": "https://dev.azure.com/inbest/_apis/projects/0a159573-229c-4410-bda8-b86b587b54d4"
+    },
+    {
+      "id": "7dfdf111-57ab-419d-acfa-12fbedb20531",
+      "name": "Billing - Interno",
+      "description": "Tableros de facturación con consumos de AWS",
+      "url": "https://dev.azure.com/inbest/_apis/projects/7dfdf111-57ab-419d-acfa-12fbedb20531"
+    }
+  ]
+}

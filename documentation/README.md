@@ -196,6 +196,47 @@ Here are the main commands available:
 - State transition bottlenecks
 - Individual work item efficiency metrics
 
+## Comandos Adicionales para Análisis
+
+### Análisis por Período Específico
+```bash
+# Sprint actual (ejemplo 2 semanas)
+python main.py --query-work-items --start-date "2025-07-01" --end-date "2025-07-15"
+
+# Análisis mensual
+python main.py --query-work-items --start-date "2025-06-01" --end-date "2025-06-30"
+
+# Análisis trimestral
+python main.py --query-work-items --start-date "2025-04-01" --end-date "2025-06-30"
+```
+
+### Filtros por Tipo de Work Item
+```bash
+# Solo bugs
+python main.py --query-work-items --work-item-types "Bug" --states "Closed,Done"
+
+# Solo features/historias de usuario
+python main.py --query-work-items --work-item-types "User Story,Feature" --states "Closed,Done"
+
+# Análisis completo con work items activos para completion rate realista
+python main.py --query-work-items --states "Closed,Done,Active,New,In Progress" --start-date "2025-06-01" --end-date "2025-07-01"
+```
+
+### Análisis de Desarrollador Individual
+```bash
+# Análisis detallado de un desarrollador
+python main.py --query-work-items --assigned-to "Diego Lopez" --export-csv "diego_analysis.csv"
+
+# Análisis de múltiples desarrolladores con estados productivos expandidos
+python main.py --query-work-items --assigned-to "Carlos Vazquez,Diego Lopez" --productive-states "Active,In Progress,Code Review,Testing" --export-csv "team_analysis.csv"
+```
+
+### Optimización de Horas Activas
+```bash
+# Para obtener ~160h mensuales reales, expandir estados productivos
+python main.py --query-work-items --assigned-to "Desarrollador1,Desarrollador2" --productive-states "Active,In Progress,Code Review,Testing,To Do,New" --start-date "2025-06-01" --end-date "2025-07-01"
+```
+
 ### Other Project Operations (Requires `--project-id`)
 
 - **List Connected GitHub Repositories:**

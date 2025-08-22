@@ -1,7 +1,7 @@
 import requests
 import base64
 import sys
-from config import Config
+from config.config import Config
 
 
 class AzureDevOps:
