@@ -8,6 +8,10 @@ from typing import List, Dict, Optional, Any
 import csv
 import os
 from urllib.parse import quote
+import concurrent.futures
+import time
+import requests
+from typing import Tuple
 
 
 class WorkItemOperations(AzureDevOps):
@@ -262,6 +266,125 @@ class WorkItemOperations(AzureDevOps):
         print(f"Total work items found across all pages: {len(all_work_item_ids)}")
         return all_work_item_ids
     
+    def execute_optimized_wiql_query(self, project_id: str, query: str, include_revisions: bool = True) -> Tuple[List[int], Dict]:
+        """
+        Enhanced WIQL query execution with performance optimization and metrics.
+        
+        Args:
+            project_id: Project ID to query
+            query: WIQL query string
+            include_revisions: Whether to attempt to fetch revisions in the same call
+            
+        Returns:
+            Tuple of (work_item_ids, performance_metrics)
+        """
+        start_time = time.time()
+        performance_metrics = {
+            "wiql_calls": 0,
+            "total_api_calls": 0,
+            "items_found": 0,
+            "optimization_used": None,
+            "execution_time": 0
+        }
+        
+        print(f"🚀 Executing optimized WIQL query for project: {project_id}")
+        
+        # Try enhanced WIQL with $expand parameter first
+        base_endpoint = f"{project_id}/_apis/wit/wiql?api-version={self.get_api_version('wiql')}"
+        
+        if include_revisions:
+            try:
+                # Attempt to use $expand=all to get additional data in one call
+                enhanced_endpoint = f"{base_endpoint}&$expand=all"
+                print("  Attempting enhanced WIQL with $expand=all...")
+                
+                data = {"query": query}
+                response = self.handle_request("POST", enhanced_endpoint, data)
+                performance_metrics["wiql_calls"] = 1
+                performance_metrics["total_api_calls"] = 1
+                
+                # Check if we got expanded data
+                if self._has_expanded_data(response):
+                    print("  ✅ Enhanced WIQL successful - got expanded data in single call!")
+                    work_item_ids = self._extract_ids_from_expanded_response(response)
+                    performance_metrics["items_found"] = len(work_item_ids)
+                    performance_metrics["optimization_used"] = "enhanced_wiql_expand"
+                    performance_metrics["execution_time"] = time.time() - start_time
+                    return work_item_ids, performance_metrics
+                else:
+                    print("  ⚠️ $expand parameter not supported, falling back to standard WIQL")
+                    
+            except Exception as e:
+                print(f"  ⚠️ Enhanced WIQL failed: {e}, falling back to standard approach")
+        
+        # Fallback to standard WIQL with pagination
+        print("  Using standard WIQL with pagination...")
+        all_work_item_ids = []
+        continuation_token = None
+        page_count = 0
+        
+        while True:
+            page_count += 1
+            
+            if continuation_token:
+                endpoint = f"{base_endpoint}&continuationToken={continuation_token}"
+                print(f"    Fetching page {page_count} with continuation token...")
+            else:
+                endpoint = base_endpoint
+                print(f"    Fetching page {page_count}...")
+            
+            data = {"query": query}
+            response = self.handle_request("POST", endpoint, data)
+            performance_metrics["wiql_calls"] += 1
+            performance_metrics["total_api_calls"] += 1
+            
+            page_work_items = response.get("workItems", [])
+            continuation_token = response.get("continuationToken")
+            
+            if page_work_items:
+                page_ids = [wi["id"] for wi in page_work_items]
+                all_work_item_ids.extend(page_ids)
+                print(f"      Found {len(page_ids)} work items on page {page_count}")
+            else:
+                print(f"      No work items found on page {page_count}")
+            
+            if not continuation_token:
+                print(f"    Pagination complete after {page_count} pages")
+                break
+                
+            if page_count > 100:
+                print(f"    WARNING: Stopping after {page_count} pages to prevent infinite loop")
+                break
+        
+        performance_metrics["items_found"] = len(all_work_item_ids)
+        performance_metrics["optimization_used"] = "standard_wiql_pagination"
+        performance_metrics["execution_time"] = time.time() - start_time
+        
+        print(f"  📊 Performance: {len(all_work_item_ids)} items, {performance_metrics['wiql_calls']} WIQL calls, {performance_metrics['execution_time']:.2f}s")
+        return all_work_item_ids, performance_metrics
+    
+    def _has_expanded_data(self, response: Dict) -> bool:
+        """Check if WIQL response contains expanded data like revisions."""
+        # Check for common expanded data indicators
+        if not response or "workItems" not in response:
+            return False
+            
+        # Look for expanded fields in the response structure
+        work_items = response.get("workItems", [])
+        if not work_items:
+            return False
+            
+        # Check if any work item has expanded data (revisions, fields, etc.)
+        sample_item = work_items[0] if work_items else {}
+        expanded_indicators = ["revisions", "fields", "relations", "_links"]
+        
+        return any(indicator in sample_item for indicator in expanded_indicators)
+    
+    def _extract_ids_from_expanded_response(self, response: Dict) -> List[int]:
+        """Extract work item IDs from expanded WIQL response."""
+        work_items = response.get("workItems", [])
+        return [wi.get("id") for wi in work_items if wi.get("id")]
+    
     def _get_project_url_segment(self, project_id, project_name):
         """
         Utility to get the correct project segment for API URLs, preferring ID, else URL-encoded name.
@@ -322,6 +445,97 @@ class WorkItemOperations(AzureDevOps):
             }
             simplified_items.append(simplified_item)
         return simplified_items
+    
+    def get_work_item_details_batch(self, project_id: str, work_item_ids: List[int], 
+                                  project_name: str = None, batch_size: int = 200) -> Tuple[List[Dict], Dict]:
+        """
+        Get detailed information for work items using batch processing for optimal performance.
+        
+        Args:
+            project_id: Project ID
+            work_item_ids: List of work item IDs
+            project_name: Project name (optional, for fallback)
+            batch_size: Number of items to fetch per API call (max 200)
+            
+        Returns:
+            Tuple of (work_items, performance_metrics)
+        """
+        if not work_item_ids:
+            return [], {"batch_calls": 0, "items_processed": 0, "execution_time": 0}
+        
+        start_time = time.time()
+        performance_metrics = {
+            "batch_calls": 0,
+            "items_processed": 0,
+            "execution_time": 0,
+            "average_batch_size": 0
+        }
+        
+        print(f"🔄 Fetching details for {len(work_item_ids)} work items in batches of {batch_size}")
+        
+        all_simplified_items = []
+        project_segment = self._get_project_url_segment(project_id, project_name)
+        
+        # Process in batches to optimize API calls
+        for i in range(0, len(work_item_ids), batch_size):
+            batch = work_item_ids[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            total_batches = ((len(work_item_ids) - 1) // batch_size) + 1
+            
+            print(f"  Processing batch {batch_num}/{total_batches}: {len(batch)} items")
+            
+            ids_str = ",".join(map(str, batch))
+            endpoint = f"{project_segment}/_apis/wit/workitems?ids={ids_str}&api-version={self.get_api_version('work_items')}"
+            
+            try:
+                response = self.handle_request("GET", endpoint)
+                work_items = response.get("value", [])
+                performance_metrics["batch_calls"] += 1
+                
+                # Transform to simpler format with enhanced field extraction
+                for wi in work_items:
+                    fields = wi.get("fields", {})
+                    simplified_item = {
+                        "id": wi["id"],
+                        "title": fields.get("System.Title", ""),
+                        "assigned_to": fields.get("System.AssignedTo", {}).get("displayName", "Unassigned"),
+                        "state": fields.get("System.State", ""),
+                        "work_item_type": fields.get("System.WorkItemType", ""),
+                        "created_date": fields.get("System.CreatedDate", ""),
+                        "changed_date": fields.get("System.ChangedDate", ""),
+                        "start_date": fields.get("Microsoft.VSTS.Scheduling.StartDate", ""),
+                        "target_date": fields.get("Microsoft.VSTS.Scheduling.TargetDate", ""),
+                        "closed_date": fields.get("Microsoft.VSTS.Common.ClosedDate", ""),
+                        "resolved_date": fields.get("Microsoft.VSTS.Common.ResolvedDate", ""),
+                        "area_path": fields.get("System.AreaPath", ""),
+                        "iteration_path": fields.get("System.IterationPath", ""),
+                        # Enhanced fields from schema
+                        "original_estimate": fields.get("Microsoft.VSTS.Scheduling.OriginalEstimate", 0),
+                        "priority": fields.get("Microsoft.VSTS.Common.Priority", 0),
+                        "reason": fields.get("System.Reason", ""),
+                        "resolved_by": fields.get("Microsoft.VSTS.Common.ResolvedBy", {}).get("displayName", ""),
+                        "created_by": fields.get("System.CreatedBy", {}).get("displayName", ""),
+                        "changed_by": fields.get("System.ChangedBy", {}).get("displayName", ""),
+                        # Custom fields (if available)
+                        "custom_fecha_planificada": fields.get("Custom.FechaPlanificada", ""),
+                        "custom_tipo_actividad": fields.get("Custom.TipoActividad", "")
+                    }
+                    all_simplified_items.append(simplified_item)
+                    
+                performance_metrics["items_processed"] += len(work_items)
+                print(f"    ✅ Batch {batch_num} processed: {len(work_items)} items")
+                
+            except Exception as e:
+                print(f"    ❌ Batch {batch_num} failed: {e}")
+                continue
+        
+        performance_metrics["execution_time"] = time.time() - start_time
+        performance_metrics["average_batch_size"] = len(work_item_ids) / max(performance_metrics["batch_calls"], 1)
+        
+        print(f"  📊 Batch processing complete: {performance_metrics['items_processed']} items, "
+              f"{performance_metrics['batch_calls']} API calls, {performance_metrics['execution_time']:.2f}s")
+        
+        return all_simplified_items, performance_metrics
 
     def get_work_item_revisions(self, project_id: str, work_item_id: int, project_name: str = None) -> List[Dict]:
         """
@@ -350,6 +564,157 @@ class WorkItemOperations(AzureDevOps):
             }
             simplified_revisions.append(simplified_revision)
         return simplified_revisions
+    
+    def get_work_item_revisions_parallel(self, work_items: List[Dict], max_workers: int = 10, 
+                                       batch_size: int = 50) -> Tuple[List[Dict], Dict]:
+        """
+        Get revision history for multiple work items using parallel processing with connection pooling.
+        
+        Args:
+            work_items: List of work items with project_id, id, and project_name
+            max_workers: Maximum number of concurrent threads
+            batch_size: Number of items to process per batch
+            
+        Returns:
+            Tuple of (work_items_with_revisions, performance_metrics)
+        """
+        if not work_items:
+            return [], {"revision_calls": 0, "items_processed": 0, "execution_time": 0, "failed_items": 0}
+        
+        start_time = time.time()
+        performance_metrics = {
+            "revision_calls": 0,
+            "items_processed": 0,
+            "execution_time": 0,
+            "failed_items": 0,
+            "parallel_batches": 0,
+            "average_revisions_per_item": 0
+        }
+        
+        print(f"⚡ Fetching revisions for {len(work_items)} work items using parallel processing...")
+        print(f"  Configuration: {max_workers} workers, batch size {batch_size}")
+        
+        # Create a session for connection pooling
+        def create_session():
+            session = requests.Session()
+            session.headers.update({
+                "Authorization": f"Basic {self.encoded_pat}",
+                "Content-Type": "application/json"
+            })
+            return session
+        
+        def fetch_revisions_for_item(session, item):
+            """Fetch revisions for a single work item."""
+            try:
+                project_segment = self._get_project_url_segment(item.get('project_id'), item.get('project_name'))
+                url = f"{self.base_url}{project_segment}/_apis/wit/workitems/{item['id']}/revisions?api-version={self.get_api_version('work_items')}"
+                
+                response = session.get(url, timeout=30)
+                response.raise_for_status()
+                
+                revisions_data = response.json()
+                revisions = revisions_data.get("value", [])
+                
+                # Transform revisions to simpler format
+                simplified_revisions = []
+                for revision in revisions:
+                    fields = revision.get("fields", {})
+                    simplified_revision = {
+                        "revision": revision.get("rev", 0),
+                        "state": fields.get("System.State", ""),
+                        "changed_date": fields.get("System.ChangedDate", ""),
+                        "changed_by": fields.get("System.ChangedBy", {}).get("displayName", "Unknown"),
+                        "reason": fields.get("System.Reason", "")
+                    }
+                    simplified_revisions.append(simplified_revision)
+                
+                item["revisions"] = simplified_revisions
+                return {"item": item, "success": True, "revision_count": len(simplified_revisions)}
+                
+            except Exception as e:
+                print(f"    ❌ Failed to get revisions for item {item['id']}: {e}")
+                item["revisions"] = []
+                return {"item": item, "success": False, "revision_count": 0}
+        
+        def process_batch(batch_items):
+            """Process a batch of items with a dedicated session."""
+            session = create_session()
+            batch_results = []
+            batch_revision_calls = 0
+            batch_failed = 0
+            total_revisions = 0
+            
+            try:
+                for item in batch_items:
+                    result = fetch_revisions_for_item(session, item)
+                    batch_results.append(result["item"])
+                    batch_revision_calls += 1
+                    total_revisions += result["revision_count"]
+                    
+                    if not result["success"]:
+                        batch_failed += 1
+                        
+                return {
+                    "items": batch_results,
+                    "calls": batch_revision_calls,
+                    "failed": batch_failed,
+                    "total_revisions": total_revisions
+                }
+            finally:
+                session.close()
+        
+        # Process work items in batches using parallel execution
+        batches = [work_items[i:i + batch_size] for i in range(0, len(work_items), batch_size)]
+        performance_metrics["parallel_batches"] = len(batches)
+        
+        all_items_with_revisions = []
+        total_revisions_fetched = 0
+        
+        print(f"  Processing {len(batches)} batches in parallel...")
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all batches for parallel processing
+            future_to_batch = {executor.submit(process_batch, batch): i for i, batch in enumerate(batches)}
+            
+            for future in concurrent.futures.as_completed(future_to_batch):
+                batch_idx = future_to_batch[future]
+                try:
+                    batch_result = future.result()
+                    
+                    all_items_with_revisions.extend(batch_result["items"])
+                    performance_metrics["revision_calls"] += batch_result["calls"]
+                    performance_metrics["failed_items"] += batch_result["failed"]
+                    total_revisions_fetched += batch_result["total_revisions"]
+                    
+                    success_count = batch_result["calls"] - batch_result["failed"]
+                    print(f"    ✅ Batch {batch_idx + 1}/{len(batches)} complete: "
+                          f"{success_count}/{batch_result['calls']} successful, "
+                          f"{batch_result['total_revisions']} revisions fetched")
+                    
+                except Exception as e:
+                    print(f"    ❌ Batch {batch_idx + 1} failed: {e}")
+                    # Add items without revisions to maintain order
+                    for item in batches[batch_idx]:
+                        item["revisions"] = []
+                        all_items_with_revisions.append(item)
+                        performance_metrics["failed_items"] += 1
+        
+        performance_metrics["items_processed"] = len(all_items_with_revisions)
+        performance_metrics["execution_time"] = time.time() - start_time
+        performance_metrics["average_revisions_per_item"] = total_revisions_fetched / max(len(work_items), 1)
+        
+        success_rate = ((performance_metrics["items_processed"] - performance_metrics["failed_items"]) / 
+                       max(performance_metrics["items_processed"], 1)) * 100
+        
+        print(f"  📊 Parallel revision fetching complete:")
+        print(f"    • {performance_metrics['items_processed']} items processed")
+        print(f"    • {performance_metrics['revision_calls']} API calls made")
+        print(f"    • {total_revisions_fetched} total revisions fetched")
+        print(f"    • {success_rate:.1f}% success rate")
+        print(f"    • {performance_metrics['execution_time']:.2f}s execution time")
+        print(f"    • {performance_metrics['average_revisions_per_item']:.1f} avg revisions per item")
+        
+        return all_items_with_revisions, performance_metrics
 
     def calculate_fair_efficiency_metrics(self, 
                                          work_item: Dict,
@@ -781,6 +1146,399 @@ class WorkItemOperations(AzureDevOps):
         return all_work_items
 
 
+    def get_work_items_with_efficiency_optimized(self,
+                                     project_id: Optional[str] = None,
+                                     project_names: Optional[List[str]] = None,
+                                     assigned_to: Optional[List[str]] = None,
+                                     work_item_types: Optional[List[str]] = None,
+                                     states: Optional[List[str]] = None,
+                                     start_date: Optional[str] = None,
+                                     end_date: Optional[str] = None,
+                                     date_field: str = "ClosedDate",
+                                     additional_filters: Optional[Dict[str, str]] = None,
+                                     calculate_efficiency: bool = True,
+                                     productive_states: Optional[List[str]] = None,
+                                     blocked_states: Optional[List[str]] = None,
+                                     all_projects: bool = False,
+                                     max_projects: int = None,
+                                     refresh_projects_cache: bool = False,
+                                     use_parallel_processing: bool = True,
+                                     max_workers: int = 10,
+                                     batch_size: int = 200,
+                                     ultra_mode: bool = False) -> Dict:
+        """
+        🚀 OPTIMIZED method to get work items with efficiency calculations using batch processing and parallel execution.
+        
+        Performance improvements:
+        - Enhanced WIQL queries with $expand parameter
+        - Batch processing for work item details (200 items per call)
+        - Parallel revision fetching with connection pooling
+        - Ultra mode: bypasses project discovery completely
+        - Comprehensive performance metrics and monitoring
+        
+        Args:
+            project_id: Single project ID to query (optional)
+            project_names: List of project names to filter by (optional)
+            assigned_to: List of users to filter by
+            work_item_types: List of work item types
+            states: List of states to filter by
+            start_date: Start date for filtering
+            end_date: End date for filtering
+            date_field: Field to use for date filtering
+            additional_filters: Additional filters (optional)
+            calculate_efficiency: Whether to calculate efficiency metrics
+            productive_states: States considered productive (optional)
+            blocked_states: States considered blocked (optional)
+            all_projects: Query all projects flag
+            max_projects: Maximum projects to query
+            refresh_projects_cache: Refresh project cache
+            use_parallel_processing: Enable parallel revision fetching
+            max_workers: Number of parallel workers for revision fetching
+            batch_size: Batch size for work item details fetching
+            ultra_mode: Enable ultra-optimized mode (bypasses project discovery)
+            
+        Returns:
+            Dictionary with work items, KPIs, and comprehensive performance metrics
+        """
+        overall_start_time = time.time()
+        
+        # Initialize comprehensive performance tracking
+        performance_summary = {
+            "total_execution_time": 0,
+            "optimization_strategies_used": ["ultra_optimized" if ultra_mode else "optimized"],
+            "api_call_breakdown": {
+                "wiql_calls": 0,
+                "work_item_detail_calls": 0,
+                "revision_calls": 0,
+                "total_api_calls": 0
+            },
+            "performance_gains": {
+                "estimated_original_calls": 0,
+                "actual_calls": 0,
+                "call_reduction_percentage": 0
+            },
+            "processing_phases": {}
+        }
+        
+        if ultra_mode:
+            print("🚀 ========================================")
+            print("🚀 ULTRA-OPTIMIZED WORK ITEM FETCHING")
+            print("🚀 ========================================")
+            print("⚡ Bypassing project discovery for maximum speed!")
+        else:
+            print("🚀 ========================================")
+            print("🚀 OPTIMIZED WORK ITEM FETCHING STARTED")
+            print("🚀 ========================================")
+        
+        # Phase 1: Setup and project discovery (or skip for ultra mode)
+        phase_start = time.time()
+        
+        # Default values
+        if work_item_types is None:
+            work_item_types = ["Task", "User Story", "Bug"]
+        if states is None:
+            states = ["Closed", "Done", "Resolved", "Active", "New", "To Do", "In Progress"]
+            
+        if start_date is None and end_date is None and date_field == "ClosedDate":
+            end_date = datetime.now().strftime("%Y-%m-%d")
+            start_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+            print(f"📅 Auto-set date range: {start_date} to {end_date}")
+        
+        # Project discovery logic - skip for ultra mode
+        if ultra_mode:
+            print("⚡ Skipping project discovery - using direct organization query")
+            target_projects = None  # Will be used to signal direct org query
+            performance_summary["optimization_strategies_used"].append("skip_project_discovery")
+        else:
+            # Normal project discovery logic
+            if project_id:
+                target_projects = [{'id': project_id, 'name': f'Project {project_id}'}]
+            else:
+                if project_names:
+                    all_projects_list = self.get_all_projects()
+                    target_projects = self.filter_projects_by_name(all_projects_list, project_names)
+                elif assigned_to and not all_projects:
+                    print("🔍 Using smart project discovery...")
+                    target_projects = self.find_projects_with_user_activity(
+                        assigned_to=assigned_to, work_item_types=work_item_types,
+                        states=states, start_date=start_date, end_date=end_date,
+                        date_field=date_field, max_projects=max_projects
+                    )
+                else:
+                    print("⚠️ WARNING: Querying all projects without user filtering may be slow")
+                    target_projects = self.get_all_projects()
+            
+            if not target_projects and not ultra_mode:
+                print("❌ No projects found to query.")
+                return self._empty_result_with_performance(performance_summary)
+        
+        performance_summary["processing_phases"]["project_discovery"] = time.time() - phase_start
+        
+        # Phase 2: Enhanced WIQL Query
+        phase_start = time.time()
+        query = self.build_wiql_query(
+            assigned_to=assigned_to, work_item_types=work_item_types,
+            states=states, start_date=start_date, end_date=end_date,
+            date_field=date_field, additional_filters=additional_filters
+        )
+        
+        print(f"📋 Generated WIQL Query:\n{query}\n")
+        
+        # Try organization-level optimized query first
+        try:
+            print("🌐 Attempting organization-level optimized WIQL query...")
+            
+            # In ultra mode, we need project mapping for organization-level queries
+            projects_for_mapping = target_projects
+            if ultra_mode and not target_projects:
+                print("⚡ Ultra mode: Getting all projects for ID mapping...")
+                projects_for_mapping = self.get_all_projects()
+            
+            all_work_items = self._execute_organization_wiql_optimized(
+                query, projects_for_mapping, project_names, performance_summary
+            )
+            performance_summary["optimization_strategies_used"].append("organization_level_wiql")
+            
+        except Exception as e:
+            print(f"⚠️ Organization-level query failed: {e}")
+            print("🔄 Falling back to project-by-project optimized approach...")
+            all_work_items = self._execute_project_by_project_optimized(
+                query, target_projects, performance_summary, batch_size
+            )
+            performance_summary["optimization_strategies_used"].append("project_by_project_optimized")
+        
+        performance_summary["processing_phases"]["wiql_execution"] = time.time() - phase_start
+        
+        if not all_work_items:
+            print("📭 No work items found matching criteria.")
+            return self._empty_result_with_performance(performance_summary)
+        
+        print(f"✅ Found {len(all_work_items)} work items total")
+        
+        # Phase 3: Parallel Revision Fetching
+        if calculate_efficiency and use_parallel_processing:
+            phase_start = time.time()
+            print(f"\n⚡ Phase 3: Parallel revision fetching for {len(all_work_items)} items...")
+            
+            all_work_items, revision_metrics = self.get_work_item_revisions_parallel(
+                all_work_items, max_workers=max_workers, batch_size=50
+            )
+            
+            performance_summary["api_call_breakdown"]["revision_calls"] = revision_metrics["revision_calls"]
+            performance_summary["optimization_strategies_used"].append("parallel_revision_fetching")
+            performance_summary["processing_phases"]["revision_fetching"] = time.time() - phase_start
+            
+        elif calculate_efficiency:
+            # Fallback to sequential revision fetching
+            phase_start = time.time()
+            print(f"\n🔄 Phase 3: Sequential revision fetching for {len(all_work_items)} items...")
+            
+            for item in all_work_items:
+                try:
+                    state_history = self.get_work_item_revisions(
+                        item['project_id'], item["id"], item['project_name']
+                    )
+                    item["revisions"] = state_history
+                    performance_summary["api_call_breakdown"]["revision_calls"] += 1
+                except Exception as e:
+                    print(f"❌ Failed to get revisions for item {item['id']}: {e}")
+                    item["revisions"] = []
+            
+            performance_summary["optimization_strategies_used"].append("sequential_revision_fetching")
+            performance_summary["processing_phases"]["revision_fetching"] = time.time() - phase_start
+        
+        # Phase 4: Efficiency Calculation
+        if calculate_efficiency:
+            phase_start = time.time()
+            print(f"\n🧮 Phase 4: Calculating efficiency metrics...")
+            
+            state_config = self.config_loader.get_state_categories()
+            
+            for item in all_work_items:
+                try:
+                    if not self.config_loader.should_include_work_item_with_history(item, item.get("revisions", [])):
+                        continue
+                        
+                    efficiency = self.calculate_fair_efficiency_metrics(
+                        item, item.get("revisions", []), state_config
+                    )
+                    item["efficiency"] = efficiency
+                    
+                except Exception as e:
+                    print(f"❌ Error calculating efficiency for item {item['id']}: {e}")
+                    item["efficiency"] = {}
+            
+            performance_summary["processing_phases"]["efficiency_calculation"] = time.time() - phase_start
+        
+        # Phase 5: KPI Calculation (optimized for ultra mode)
+        phase_start = time.time()
+        print(f"\n📊 Phase 5: Calculating KPIs...")
+        
+        # Get total assigned items count if needed (skip for ultra mode to save time)
+        assigned_counts = {}
+        if assigned_to and not ultra_mode:
+            print("    📊 Getting total assigned items count per developer...")
+            assigned_counts = self._get_total_assigned_items_by_developer(
+                target_projects, assigned_to, work_item_types, start_date, end_date
+            )
+        elif ultra_mode:
+            print("    ⚡ Skipping expensive total assigned items calculation for speed")
+        
+        kpis = self.calculate_comprehensive_kpi_per_developer(all_work_items, assigned_counts)
+        performance_summary["processing_phases"]["kpi_calculation"] = time.time() - phase_start
+        
+        # Finalize performance metrics
+        performance_summary["total_execution_time"] = time.time() - overall_start_time
+        
+        # Calculate performance gains
+        estimated_original_calls = 1 + len(all_work_items) * 2  # 1 WIQL + N details + N revisions
+        actual_calls = performance_summary["api_call_breakdown"]["total_api_calls"]
+        performance_summary["performance_gains"]["estimated_original_calls"] = estimated_original_calls
+        performance_summary["performance_gains"]["actual_calls"] = actual_calls
+        performance_summary["performance_gains"]["call_reduction_percentage"] = (
+            ((estimated_original_calls - actual_calls) / estimated_original_calls) * 100
+            if estimated_original_calls > 0 else 0
+        )
+        
+        self._print_performance_summary(performance_summary)
+        
+        return {
+            "work_items": all_work_items,
+            "kpis": kpis,
+            "query_info": {
+                "total_items": len(all_work_items),
+                "projects_queried": [p.get('name', 'Unknown') for p in (target_projects or [])] if not ultra_mode else ["All projects (ultra mode)"],
+                "filters_applied": {
+                    "assigned_to": assigned_to,
+                    "work_item_types": work_item_types,
+                    "states": states,
+                    "date_range": f"{start_date or 'Any'} to {end_date or 'Any'}",
+                    "date_field": date_field
+                }
+            },
+            "performance_summary": performance_summary
+        }
+    
+    def _execute_organization_wiql_optimized(self, query: str, target_projects: List[Dict], 
+                                           project_names: Optional[List[str]], 
+                                           performance_summary: Dict) -> List[Dict]:
+        """Execute organization-level WIQL with optimizations."""
+        work_items_with_projects = self.execute_organization_wiql_query(
+            query=query,
+            target_projects=target_projects if not project_names else None,
+            project_names=project_names
+        )
+        
+        performance_summary["api_call_breakdown"]["wiql_calls"] += 1
+        performance_summary["api_call_breakdown"]["total_api_calls"] += 1
+        
+        if work_items_with_projects:
+            # Filter out items with unknown project IDs
+            filtered_items = [
+                item for item in work_items_with_projects
+                if item.get('project_id', None) not in (None, '', 'Unknown')
+            ]
+            
+            if len(filtered_items) < len(work_items_with_projects):
+                skipped = len(work_items_with_projects) - len(filtered_items)
+                print(f"⚠️ Skipped {skipped} items with unknown project IDs")
+            
+            return filtered_items
+        
+        return []
+    
+    def _execute_project_by_project_optimized(self, query: str, target_projects: List[Dict], 
+                                            performance_summary: Dict, batch_size: int) -> List[Dict]:
+        """Execute project-by-project queries with batch optimization."""
+        all_work_items = []
+        
+        for project in target_projects:
+            proj_id = project['id']
+            proj_name = project['name']
+            
+            if not proj_id or proj_id == "Unknown":
+                print(f"⚠️ Skipping project with unknown ID: {proj_name}")
+                continue
+                
+            try:
+                print(f"🔍 Querying project: {proj_name} ({proj_id})")
+                
+                # Use optimized WIQL query
+                work_item_ids, wiql_metrics = self.execute_optimized_wiql_query(
+                    proj_id, query, include_revisions=False
+                )
+                
+                performance_summary["api_call_breakdown"]["wiql_calls"] += wiql_metrics["wiql_calls"]
+                performance_summary["api_call_breakdown"]["total_api_calls"] += wiql_metrics["total_api_calls"]
+                
+                if work_item_ids:
+                    # Use batch processing for work item details
+                    work_items, detail_metrics = self.get_work_item_details_batch(
+                        proj_id, work_item_ids, proj_name, batch_size
+                    )
+                    
+                    performance_summary["api_call_breakdown"]["work_item_detail_calls"] += detail_metrics["batch_calls"]
+                    performance_summary["api_call_breakdown"]["total_api_calls"] += detail_metrics["batch_calls"]
+                    
+                    # Add project info to items
+                    for item in work_items:
+                        item['project_id'] = proj_id
+                        item['project_name'] = proj_name
+                    
+                    all_work_items.extend(work_items)
+                    print(f"✅ Found {len(work_items)} items in {proj_name}")
+                else:
+                    print(f"📭 No work items found in {proj_name}")
+                    
+            except Exception as e:
+                print(f"❌ Error querying project {proj_name}: {e}")
+                continue
+        
+        return all_work_items
+    
+    def _empty_result_with_performance(self, performance_summary: Dict) -> Dict:
+        """Return empty result with performance metrics."""
+        performance_summary["total_execution_time"] = 0
+        
+        return {
+            "work_items": [],
+            "kpis": self.calculate_comprehensive_kpi_per_developer([]),
+            "query_info": {
+                "total_items": 0,
+                "projects_queried": [],
+                "filters_applied": {}
+            },
+            "performance_summary": performance_summary
+        }
+    
+    def _print_performance_summary(self, performance_summary: Dict):
+        """Print comprehensive performance summary."""
+        print(f"\n🚀 ========================================")
+        print(f"🚀 PERFORMANCE SUMMARY")
+        print(f"🚀 ========================================")
+        
+        print(f"⏱️  Total Execution Time: {performance_summary['total_execution_time']:.2f}s")
+        print(f"🎯 Optimization Strategies: {', '.join(performance_summary['optimization_strategies_used'])}")
+        
+        print(f"\n📞 API Call Breakdown:")
+        breakdown = performance_summary["api_call_breakdown"]
+        print(f"   • WIQL calls: {breakdown['wiql_calls']}")
+        print(f"   • Work item detail calls: {breakdown['work_item_detail_calls']}")
+        print(f"   • Revision calls: {breakdown['revision_calls']}")
+        print(f"   • Total API calls: {breakdown['total_api_calls']}")
+        
+        gains = performance_summary["performance_gains"]
+        print(f"\n📈 Performance Gains:")
+        print(f"   • Estimated original calls: {gains['estimated_original_calls']}")
+        print(f"   • Actual calls made: {gains['actual_calls']}")
+        print(f"   • Call reduction: {gains['call_reduction_percentage']:.1f}%")
+        
+        print(f"\n⏳ Phase Timing:")
+        for phase, duration in performance_summary["processing_phases"].items():
+            print(f"   • {phase.replace('_', ' ').title()}: {duration:.2f}s")
+        
+        print(f"🚀 ========================================\n")
+    
     def get_work_items_with_efficiency(self,
                                      project_id: Optional[str] = None,
                                      project_names: Optional[List[str]] = None,

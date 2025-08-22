@@ -16,10 +16,7 @@
       "Waiting"
     ],
     "work_item_types": [
-      "Task",
-      "User Story",
-      "Bug",
-      "Feature"
+      "Task"
     ],
     "date_field": "ClosedDate",
     "include_active_items": true,

@@ -225,23 +225,78 @@ def handle_work_item_query(args, organization, personal_access_token):
             print("Querying ALL projects in organization")
             query_scope = "all projects"
     
-    # Execute query
-    result = work_item_ops.get_work_items_with_efficiency(
-        project_id=args.project_id,
-        project_names=project_names,
-        assigned_to=assigned_to,
-        work_item_types=work_item_types,
-        states=states,
-        start_date=args.start_date,
-        end_date=args.end_date,
-        date_field=args.date_field,
-        additional_filters=additional_filters if additional_filters else None,
-        calculate_efficiency=not args.no_efficiency,
-        productive_states=productive_states,
-        blocked_states=blocked_states,
-        all_projects=args.all_projects,
-        max_projects=args.max_projects
-    )
+    # Execute query (choose ultra-optimized, optimized, or standard method)
+    if args.ultra_optimized:
+        print("⚡ Using ULTRA-OPTIMIZED processing - maximum speed mode!")
+        print("   • Bypassing project discovery completely")
+        print("   • Direct organization-level WIQL query")
+        print("   • Optimized KPI calculations")
+        print(f"   • Parallel processing: {'Disabled' if args.no_parallel else 'Enabled'}")
+        print(f"   • Max workers: {args.max_workers}")
+        
+        result = work_item_ops.get_work_items_with_efficiency_optimized(
+            project_id=args.project_id,
+            project_names=project_names,
+            assigned_to=assigned_to,
+            work_item_types=work_item_types,
+            states=states,
+            start_date=args.start_date,
+            end_date=args.end_date,
+            date_field=args.date_field,
+            additional_filters=additional_filters if additional_filters else None,
+            calculate_efficiency=not args.no_efficiency,
+            productive_states=productive_states,
+            blocked_states=blocked_states,
+            all_projects=args.all_projects,
+            max_projects=args.max_projects,
+            use_parallel_processing=not args.no_parallel,
+            max_workers=args.max_workers,
+            batch_size=min(args.batch_size, 200),  # Enforce Azure DevOps API limit
+            ultra_mode=True  # Enable ultra-optimized mode
+        )
+    elif args.optimized:
+        print("🚀 Using OPTIMIZED batch processing with parallel execution!")
+        print(f"   • Parallel processing: {'Disabled' if args.no_parallel else 'Enabled'}")
+        print(f"   • Max workers: {args.max_workers}")
+        print(f"   • Batch size: {min(args.batch_size, 200)}")  # Enforce Azure DevOps limit
+        
+        result = work_item_ops.get_work_items_with_efficiency_optimized(
+            project_id=args.project_id,
+            project_names=project_names,
+            assigned_to=assigned_to,
+            work_item_types=work_item_types,
+            states=states,
+            start_date=args.start_date,
+            end_date=args.end_date,
+            date_field=args.date_field,
+            additional_filters=additional_filters if additional_filters else None,
+            calculate_efficiency=not args.no_efficiency,
+            productive_states=productive_states,
+            blocked_states=blocked_states,
+            all_projects=args.all_projects,
+            max_projects=args.max_projects,
+            use_parallel_processing=not args.no_parallel,
+            max_workers=args.max_workers,
+            batch_size=min(args.batch_size, 200)  # Enforce Azure DevOps API limit
+        )
+    else:
+        print("📊 Using standard work item processing...")
+        result = work_item_ops.get_work_items_with_efficiency(
+            project_id=args.project_id,
+            project_names=project_names,
+            assigned_to=assigned_to,
+            work_item_types=work_item_types,
+            states=states,
+            start_date=args.start_date,
+            end_date=args.end_date,
+            date_field=args.date_field,
+            additional_filters=additional_filters if additional_filters else None,
+            calculate_efficiency=not args.no_efficiency,
+            productive_states=productive_states,
+            blocked_states=blocked_states,
+            all_projects=args.all_projects,
+            max_projects=args.max_projects
+        )
     
     # Display results
     print("\n" + "="*80)
@@ -415,6 +470,13 @@ def main():
     parser.add_argument("--delivery-score-weight", type=float, help="Delivery score weight in developer score (default: 0.3)")
     parser.add_argument("--completion-rate-weight", type=float, help="Completion rate weight in developer score (default: 0.2)")
     parser.add_argument("--on-time-delivery-weight", type=float, help="On-time delivery weight in developer score (default: 0.1)")
+    
+    # Performance optimization flags
+    parser.add_argument("--optimized", action="store_true", help="🚀 Use optimized batch processing with parallel execution for faster performance")
+    parser.add_argument("--ultra-optimized", action="store_true", help="⚡ Use ULTRA-OPTIMIZED processing - bypasses project discovery completely for maximum speed")
+    parser.add_argument("--no-parallel", action="store_true", help="Disable parallel revision fetching (use sequential instead)")
+    parser.add_argument("--max-workers", type=int, default=10, help="Maximum number of parallel workers for revision fetching (default: 10)")
+    parser.add_argument("--batch-size", type=int, default=200, help="Batch size for work item details fetching (default: 200, max: 200)")
     
     args = parser.parse_args()
 

@@ -124,7 +124,7 @@ class EfficiencyCalculator:
             return self._ignored_work_item_metrics()
         
         # Get time metrics from stack
-        productive_hours = state_stack.get_total_productive_hours()
+        raw_productive_hours = state_stack.get_total_productive_hours()
         paused_hours = state_stack.get_total_paused_hours()
         total_hours = state_stack.get_total_time_all_states()
         state_durations = state_stack.get_state_durations()
@@ -132,6 +132,21 @@ class EfficiencyCalculator:
         
         # Calculate estimated time from OriginalEstimate field
         estimated_hours = self._calculate_estimated_time_from_work_item(work_item)
+        
+        # Apply active hours capping logic: 3x estimate cap, exclude if no estimate
+        if estimated_hours <= 0:
+            # If no estimate hours, don't count active time
+            productive_hours = 0
+            pattern_summary['capping_applied'] = 'no_estimate_exclusion'
+        else:
+            # Cap active hours at 3x the estimated hours
+            max_allowed_hours = estimated_hours * 3.0
+            if raw_productive_hours > max_allowed_hours:
+                productive_hours = max_allowed_hours
+                pattern_summary['capping_applied'] = f'capped_at_3x_estimate_{raw_productive_hours:.2f}_to_{max_allowed_hours:.2f}'
+            else:
+                productive_hours = raw_productive_hours
+                pattern_summary['capping_applied'] = 'no_capping_needed'
         
         # Calculate delivery timing
         delivery_metrics = self._calculate_delivery_timing(work_item)
@@ -155,6 +170,7 @@ class EfficiencyCalculator:
         
         return {
             "active_time_hours": round(productive_hours, 2),
+            "raw_active_time_hours": round(raw_productive_hours, 2),
             "paused_time_hours": round(paused_hours, 2),
             "total_time_hours": round(total_hours, 2),
             "estimated_time_hours": round(estimated_hours, 2),
@@ -170,6 +186,7 @@ class EfficiencyCalculator:
             "active_after_reopen": round(pattern_summary.get('active_after_reopen_hours', 0), 2),
             "is_completed": pattern_summary.get('is_completed', False),
             "should_ignore": pattern_summary.get('should_ignore', False),
+            "capping_applied": pattern_summary.get('capping_applied', 'unknown'),
             "stack_summary": pattern_summary
         }
     
@@ -361,6 +378,7 @@ class EfficiencyCalculator:
         """Return empty efficiency metrics structure."""
         return {
             "active_time_hours": 0,
+            "raw_active_time_hours": 0,
             "paused_time_hours": 0,
             "total_time_hours": 0,
             "estimated_time_hours": 0,
@@ -376,6 +394,7 @@ class EfficiencyCalculator:
             "active_after_reopen": 0,
             "is_completed": False,
             "should_ignore": False,
+            "capping_applied": "no_data",
             "stack_summary": {}
         }
     
@@ -383,6 +402,7 @@ class EfficiencyCalculator:
         """Return metrics structure for ignored work items."""
         return {
             "active_time_hours": 0,
+            "raw_active_time_hours": 0,
             "paused_time_hours": 0,
             "total_time_hours": 0,
             "estimated_time_hours": 0,
@@ -398,5 +418,6 @@ class EfficiencyCalculator:
             "active_after_reopen": 0,
             "is_completed": False,
             "should_ignore": True,
+            "capping_applied": "ignored_item",
             "stack_summary": {"should_ignore": True}
         }
