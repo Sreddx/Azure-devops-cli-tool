@@ -225,7 +225,7 @@ def handle_work_item_query(args, organization, personal_access_token):
             print("Querying ALL projects in organization")
             query_scope = "all projects"
     
-    # Execute query (choose ultra-optimized, optimized, or standard method)
+    # Execute query - Always use optimized method (removed redundant fallback)
     if args.ultra_optimized:
         print("⚡ Using ULTRA-OPTIMIZED processing - maximum speed mode!")
         print("   • Bypassing project discovery completely")
@@ -254,8 +254,10 @@ def handle_work_item_query(args, organization, personal_access_token):
             batch_size=min(args.batch_size, 200),  # Enforce Azure DevOps API limit
             ultra_mode=True  # Enable ultra-optimized mode
         )
-    elif args.optimized:
-        print("🚀 Using OPTIMIZED batch processing with parallel execution!")
+    else:
+        # Use optimized method as default (was --optimized flag, now standard behavior)
+        optimization_mode = "ULTRA-OPTIMIZED" if args.optimized else "OPTIMIZED"
+        print(f"🚀 Using {optimization_mode} batch processing with parallel execution!")
         print(f"   • Parallel processing: {'Disabled' if args.no_parallel else 'Enabled'}")
         print(f"   • Max workers: {args.max_workers}")
         print(f"   • Batch size: {min(args.batch_size, 200)}")  # Enforce Azure DevOps limit
@@ -277,25 +279,8 @@ def handle_work_item_query(args, organization, personal_access_token):
             max_projects=args.max_projects,
             use_parallel_processing=not args.no_parallel,
             max_workers=args.max_workers,
-            batch_size=min(args.batch_size, 200)  # Enforce Azure DevOps API limit
-        )
-    else:
-        print("📊 Using standard work item processing...")
-        result = work_item_ops.get_work_items_with_efficiency(
-            project_id=args.project_id,
-            project_names=project_names,
-            assigned_to=assigned_to,
-            work_item_types=work_item_types,
-            states=states,
-            start_date=args.start_date,
-            end_date=args.end_date,
-            date_field=args.date_field,
-            additional_filters=additional_filters if additional_filters else None,
-            calculate_efficiency=not args.no_efficiency,
-            productive_states=productive_states,
-            blocked_states=blocked_states,
-            all_projects=args.all_projects,
-            max_projects=args.max_projects
+            batch_size=min(args.batch_size, 200),  # Enforce Azure DevOps API limit
+            ultra_mode=args.optimized  # Enable ultra mode for --optimized flag
         )
     
     # Display results
