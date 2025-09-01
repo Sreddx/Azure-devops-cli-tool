@@ -117,68 +117,53 @@ class WorkItemOperations(AzureDevOps):
             assigned_str = "', '".join(assigned_to)
             conditions.append(f"[System.AssignedTo] IN ('{assigned_str}')")
         
-        # States filter
-        if states:
+        # States filter (will be handled in date conditions if date filtering is enabled)
+        if states and not (start_date or end_date):
             states_str = "', '".join(states)
             conditions.append(f"[System.State] IN ('{states_str}')")
         
-        # Enhanced date filtering logic to handle different scenarios properly
+        # Enhanced date filtering with strict target date priority (no margin)
         if start_date or end_date:
             date_conditions = []
             
-            # For closed items: use closed date when available
+            print(f"🗓️  Using strict date filtering: {start_date} to {end_date} (no margin)")
+            
+            # Priority 1: Always use target date for primary filtering (prevents old items)
+            # This ensures items are only included if their target date is within exact scope
+            all_states = (states or [])
+            if all_states:
+                states_str = "', '".join(all_states)
+                target_condition_parts = [f"[System.State] IN ('{states_str}')"]
+                
+                # Primary filter: Target date must be within EXACT range (no margin)
+                if start_date:
+                    target_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'")
+                if end_date:
+                    target_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'")
+                
+                if len(target_condition_parts) > 1:
+                    date_conditions.append(f"({' AND '.join(target_condition_parts)})")
+            
+            # Priority 2: For closed items without target dates, allow closed date as fallback
+            # But only if closed date is within the original range (strict)
             closed_states = ['Closed', 'Done']
-            if any(state in closed_states for state in (states or [])):
+            if any(state in closed_states for state in all_states) and date_field == "ClosedDate":
                 closed_condition_parts = []
                 closed_states_str = "', '".join(closed_states)
-                closed_condition_parts.append(f"[System.State] IN ('{closed_states_str}')")
                 
-                if date_field == "TargetDate":
-                    # For target date queries, use target date even for closed items
-                    if start_date:
-                        closed_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'")
-                    if end_date:
-                        closed_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'")
-                else:
-                    # For closed date queries, use closed date
-                    if start_date:
-                        closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] >= '{start_date}'")
-                    if end_date:
-                        closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] <= '{end_date}'")
+                # Only include closed items if:
+                # 1. They have NO target date (NULL or empty), AND
+                # 2. Their closed date is within the original range (strict)
+                closed_condition_parts.append(f"[System.State] IN ('{closed_states_str}')")
+                closed_condition_parts.append("[Microsoft.VSTS.Scheduling.TargetDate] = ''")  # No target date
+                
+                if start_date:
+                    closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] >= '{start_date}'")
+                if end_date:
+                    closed_condition_parts.append(f"[Microsoft.VSTS.Common.ClosedDate] <= '{end_date}'")
                 
                 if len(closed_condition_parts) > 1:
                     date_conditions.append(f"({' AND '.join(closed_condition_parts)})")
-            
-            # For resolved items: use target date (no resolved date field available)
-            resolved_states = ['Resolved']
-            if any(state in resolved_states for state in (states or [])):
-                resolved_condition_parts = []
-                resolved_states_str = "', '".join(resolved_states)
-                resolved_condition_parts.append(f"[System.State] IN ('{resolved_states_str}')")
-                
-                # Always use target date for resolved items since there's no resolved date field
-                if start_date:
-                    resolved_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'")
-                if end_date:
-                    resolved_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'")
-                
-                if len(resolved_condition_parts) > 1:
-                    date_conditions.append(f"({' AND '.join(resolved_condition_parts)})")
-            
-            # For active/new items: use target date within timeframe
-            active_states = ['Active', 'New', 'To Do', 'In Progress']
-            if any(state in active_states for state in (states or [])):
-                active_condition_parts = []
-                active_states_str = "', '".join(active_states)
-                active_condition_parts.append(f"[System.State] IN ('{active_states_str}')")
-                
-                if start_date:
-                    active_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'")
-                if end_date:
-                    active_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'")
-                
-                if len(active_condition_parts) > 1:
-                    date_conditions.append(f"({' AND '.join(active_condition_parts)})")
             
             # Combine date conditions with OR
             if date_conditions:

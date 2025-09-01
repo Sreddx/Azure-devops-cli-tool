@@ -31,7 +31,8 @@
       "In Progress",
       "Development",
       "Code Review",
-      "Testing"
+      "Testing",
+      "Doing"
     ],
     "pause_stopper_states": [
       "Stopper",
@@ -83,10 +84,10 @@
       "slightly_early": 0.25
     },
     "late_delivery_scores": {
-      "late_1_3": 90.0,
-      "late_4_7": 80.0,
-      "late_8_14": 70.0,
-      "late_15_plus": 60.0
+      "late_1_3": 95.0,
+      "late_4_7": 90.0,
+      "late_8_14": 85.0,
+      "late_15_plus": 70.0
     },
     "late_penalty_mitigation": {
       "late_1_3": 2.0,

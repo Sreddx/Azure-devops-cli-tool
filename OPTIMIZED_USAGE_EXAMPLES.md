@@ -18,16 +18,16 @@
 5. **Intelligent Fallbacks**: Graceful degradation to standard methods if optimizations fail
 
 ## 🚀 Usage Examples
-
+python run.py --query-work-items --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alejandro Valenzuela,Gerardo Melgoza,Hanz Izarraraz,Osvaldo de Luna,Uriel Cortés,Emmanuel Pérez,Fernando Alcaraz,Damian Gaspar,Cristian Soria,Daniel Cayola,Ximena Segura" --start-date "2025-08-01" --end-date "2025-08-31" --optimized --export-csv "august_results.csv"
 ### Basic Optimized Query
 ```bash
 # Use optimized processing with default settings
 python run.py --query-work-items \
-  --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez" \
+  --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alejandro Valenzuela,Gerardo Melgoza,Hanz Izarraraz,Osvaldo de Luna,Uriel Cortés,Emmanuel Pérez,Fernando Alcaraz,Damian Gaspar,Cristian Soria,Daniel Cayola,Ximena Segura"  \
   --start-date "2025-08-01" \
-  --end-date "2025-08-21" \
+  --end-date "2025-08-31" \
   --optimized \
-  --export-csv "optimized_results.csv"
+  --export-csv "august_results.csv"
 ```
 
 ### High-Performance Configuration
@@ -62,7 +62,7 @@ python run.py --query-work-items \
 ```bash
 # Query all projects with optimization (use carefully)
 python run.py --query-work-items \
-  --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alex Valenzuela,Gerardo Melgoza,Hanz Izarraraz,Osvaldo de Luna,Uriel Cortes,Emmanuel Pérez,Fernando Alcaraz,Damian Gaspar,Cristian Soria,Daniel Cayola,Ximena Segura" \
+  --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alejandro Valenzuela,Gerardo Melgoza,Hanz Izarraraz,Osvaldo de Luna,Uriel Cortés,Emmanuel Pérez,Fernando Alcaraz,Damian Gaspar,Cristian Soria,Daniel Cayola,Ximena Segura" \
   --all-projects \
   --optimized \
   --max-workers 10 \
