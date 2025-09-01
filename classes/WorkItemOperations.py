@@ -23,7 +23,7 @@ class WorkItemOperations(AzureDevOps):
         super().__init__(organization, personal_access_token)
         
         # Initialize configuration loader
-        self.config_loader = ConfigLoader(config_file or "azure_devops_config.json")
+        self.config_loader = ConfigLoader(config_file or "config/azure_devops_config.json")
         
         # Merge scoring config with loaded config
         if scoring_config:
@@ -1169,11 +1169,23 @@ class WorkItemOperations(AzureDevOps):
         # Phase 1: Setup and project discovery (or skip for ultra mode)
         phase_start = time.time()
         
-        # Default values
+        # Default values with priority: parameters → config → fallback
         if work_item_types is None:
-            work_item_types = ["Task", "User Story", "Bug"]
+            # Try to get work_item_types from config file
+            config_work_item_types = self.config_loader.get_work_item_types()
+            if config_work_item_types:
+                work_item_types = config_work_item_types
+            else:
+                # Fallback to hardcoded default
+                work_item_types = ["Task", "User Story", "Bug"]
         if states is None:
-            states = ["Closed", "Done", "Resolved", "Active", "New", "To Do", "In Progress"]
+            # Try to get states from config file
+            config_states = self.config_loader.get_states_to_fetch()
+            if config_states:
+                states = config_states
+            else:
+                # Fallback to hardcoded default
+                states = ["Closed", "Done", "Resolved", "Active", "New", "To Do", "In Progress"]
             
         if start_date is None and end_date is None and date_field == "ClosedDate":
             end_date = datetime.now().strftime("%Y-%m-%d")

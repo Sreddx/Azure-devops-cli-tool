@@ -37,6 +37,7 @@ class ConfigLoader:
                 self.config = json.load(f)
             print(f"Loaded configuration from {self.config_file_path}")
             self._validate_config()
+            print("CONFIGURACION CARGADA")
             return self.config
         except (json.JSONDecodeError, FileNotFoundError) as e:
             print(f"Error loading config file: {e}. Using defaults.")

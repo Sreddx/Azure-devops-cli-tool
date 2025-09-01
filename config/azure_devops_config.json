@@ -16,7 +16,8 @@
       "Waiting"
     ],
     "work_item_types": [
-      "Task"
+      "Task",
+      "Issue"
     ],
     "date_field": "ClosedDate",
     "include_active_items": true,
@@ -98,10 +99,10 @@
   },
   "developer_scoring": {
     "weights": {
-      "fair_efficiency": 0.4,
+      "fair_efficiency": 0.2,
       "delivery_score": 0.3,
-      "completion_rate": 0.2,
-      "on_time_delivery": 0.1
+      "completion_rate": 0.3,
+      "on_time_delivery": 0.2
     },
     "minimum_items_for_scoring": 3
   },
