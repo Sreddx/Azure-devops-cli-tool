@@ -29,7 +29,8 @@ class WorkItemStateStack:
     
     def __init__(self, office_start_hour: int = 9, office_end_hour: int = 17, 
                  max_hours_per_day: int = 8, timezone_str: str = "America/Mexico_City",
-                 state_config: Optional[Dict] = None):
+                 state_config: Optional[Dict] = None,
+                 timeframe_start: Optional[str] = None, timeframe_end: Optional[str] = None):
         """
         Initialize state stack with office hours configuration and state categories.
         
@@ -39,6 +40,8 @@ class WorkItemStateStack:
             max_hours_per_day: Maximum productive hours to count per day
             timezone_str: Timezone for office hours calculation
             state_config: Configuration for state categories and behaviors
+            timeframe_start: Start date of the query timeframe (YYYY-MM-DD format)
+            timeframe_end: End date of the query timeframe (YYYY-MM-DD format)
         """
         self.transitions = []  # Stack of state transitions
         self.time_accumulator = {}  # Running totals per state (business hours)
@@ -69,6 +72,20 @@ class WorkItemStateStack:
         self.active_after_reopen_hours = 0
         self.is_completed = False
         self.should_ignore = False
+        
+        # Timeframe filtering
+        self.timeframe_start_dt = None
+        self.timeframe_end_dt = None
+        if timeframe_start:
+            try:
+                self.timeframe_start_dt = datetime.fromisoformat(f"{timeframe_start}T00:00:00+00:00")
+            except (ValueError, TypeError):
+                pass
+        if timeframe_end:
+            try:
+                self.timeframe_end_dt = datetime.fromisoformat(f"{timeframe_end}T23:59:59+00:00")
+            except (ValueError, TypeError):
+                pass
     
     def push_state(self, new_state: str, timestamp: datetime, reason: str = "", 
                    changed_by: str = "", revision: int = 0):
@@ -151,6 +168,7 @@ class WorkItemStateStack:
                                state: str) -> float:
         """
         Calculate time spent in a specific state, applying business hours logic for productive states.
+        Only counts time that falls within the specified timeframe for productive states.
         
         Args:
             start_time: Start datetime (timezone-aware)
@@ -160,12 +178,41 @@ class WorkItemStateStack:
         Returns:
             Total hours as float
         """
-        # For productive states, use business hours calculation
+        # For productive states, apply timeframe filtering and use business hours calculation
         if state in self.productive_states:
-            return self._calculate_business_hours_in_period(start_time, end_time)
+            # Apply timeframe filtering for productive states only
+            filtered_start, filtered_end = self._apply_timeframe_filtering(start_time, end_time)
+            if filtered_start >= filtered_end:
+                return 0.0  # No time within timeframe
+            return self._calculate_business_hours_in_period(filtered_start, filtered_end)
         else:
             # For non-productive states, use calendar time but still respect weekends/office hours
+            # No timeframe filtering for non-productive states
             return self._calculate_business_hours_in_period(start_time, end_time, count_all_hours=True)
+    
+    def _apply_timeframe_filtering(self, start_time: datetime, end_time: datetime) -> Tuple[datetime, datetime]:
+        """
+        Filter the time period to only include the portion that falls within the specified timeframe.
+        
+        Args:
+            start_time: Original start time
+            end_time: Original end time
+            
+        Returns:
+            Tuple of (filtered_start, filtered_end) datetime objects
+        """
+        filtered_start = start_time
+        filtered_end = end_time
+        
+        # Apply timeframe start filter
+        if self.timeframe_start_dt and start_time < self.timeframe_start_dt:
+            filtered_start = self.timeframe_start_dt
+            
+        # Apply timeframe end filter  
+        if self.timeframe_end_dt and end_time > self.timeframe_end_dt:
+            filtered_end = self.timeframe_end_dt
+            
+        return filtered_start, filtered_end
     
     def _calculate_business_hours_in_period(self, start_time: datetime, end_time: datetime, 
                                           count_all_hours: bool = False) -> float:
@@ -316,7 +363,8 @@ class WorkItemStateStack:
     def from_revision_history(cls, revision_history: List[Dict], 
                              office_start_hour: int = 9, office_end_hour: int = 17,
                              max_hours_per_day: int = 8, timezone_str: str = "America/Mexico_City",
-                             state_config: Optional[Dict] = None) -> 'WorkItemStateStack':
+                             state_config: Optional[Dict] = None,
+                             timeframe_start: Optional[str] = None, timeframe_end: Optional[str] = None) -> 'WorkItemStateStack':
         """
         Create a state stack from Azure DevOps revision history.
         
@@ -327,11 +375,13 @@ class WorkItemStateStack:
             max_hours_per_day: Maximum hours to count per day
             timezone_str: Timezone for calculations
             state_config: Configuration for state categories
+            timeframe_start: Start date of the query timeframe (YYYY-MM-DD format)
+            timeframe_end: End date of the query timeframe (YYYY-MM-DD format)
             
         Returns:
             Populated WorkItemStateStack
         """
-        stack = cls(office_start_hour, office_end_hour, max_hours_per_day, timezone_str, state_config)
+        stack = cls(office_start_hour, office_end_hour, max_hours_per_day, timezone_str, state_config, timeframe_start, timeframe_end)
         
         # Sort revisions by revision number to ensure chronological order
         sorted_revisions = sorted(revision_history, key=lambda x: x.get('revision', 0))
@@ -368,7 +418,9 @@ class WorkItemStateStack:
 
 def create_stack_from_work_item(work_item_data: Dict, revision_history: List[Dict],
                                state_config: Optional[Dict] = None,
-                               office_hours_config: Optional[Dict] = None) -> WorkItemStateStack:
+                               office_hours_config: Optional[Dict] = None,
+                               timeframe_start: Optional[str] = None,
+                               timeframe_end: Optional[str] = None) -> WorkItemStateStack:
     """
     Create a complete state stack from work item data and revision history.
     
@@ -377,6 +429,8 @@ def create_stack_from_work_item(work_item_data: Dict, revision_history: List[Dic
         revision_history: List of state change revisions
         state_config: Configuration for state categories and behaviors
         office_hours_config: Office hours configuration
+        timeframe_start: Start date of the query timeframe (YYYY-MM-DD format)
+        timeframe_end: End date of the query timeframe (YYYY-MM-DD format)
         
     Returns:
         Configured WorkItemStateStack with calculated metrics
@@ -394,6 +448,8 @@ def create_stack_from_work_item(work_item_data: Dict, revision_history: List[Dic
     stack = WorkItemStateStack.from_revision_history(
         revision_history,
         state_config=state_config,
+        timeframe_start=timeframe_start,
+        timeframe_end=timeframe_end,
         **office_hours_config
     )
     

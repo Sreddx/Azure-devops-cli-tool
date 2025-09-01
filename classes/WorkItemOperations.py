@@ -496,7 +496,13 @@ class WorkItemOperations(AzureDevOps):
                 "state": fields.get("System.State", ""),
                 "changed_date": fields.get("System.ChangedDate", ""),
                 "changed_by": fields.get("System.ChangedBy", {}).get("displayName", "Unknown"),
-                "reason": fields.get("System.Reason", "")
+                "reason": fields.get("System.Reason", ""),
+                # Include fields for historical estimate retrieval
+                "fields": {
+                    "Microsoft.VSTS.Scheduling.OriginalEstimate": fields.get("Microsoft.VSTS.Scheduling.OriginalEstimate", 0),
+                    "System.State": fields.get("System.State", ""),
+                    "System.Reason": fields.get("System.Reason", "")
+                }
             }
             simplified_revisions.append(simplified_revision)
         return simplified_revisions
@@ -560,7 +566,13 @@ class WorkItemOperations(AzureDevOps):
                         "state": fields.get("System.State", ""),
                         "changed_date": fields.get("System.ChangedDate", ""),
                         "changed_by": fields.get("System.ChangedBy", {}).get("displayName", "Unknown"),
-                        "reason": fields.get("System.Reason", "")
+                        "reason": fields.get("System.Reason", ""),
+                        # Include fields for historical estimate retrieval
+                        "fields": {
+                            "Microsoft.VSTS.Scheduling.OriginalEstimate": fields.get("Microsoft.VSTS.Scheduling.OriginalEstimate", 0),
+                            "System.State": fields.get("System.State", ""),
+                            "System.Reason": fields.get("System.Reason", "")
+                        }
                     }
                     simplified_revisions.append(simplified_revision)
                 
@@ -655,10 +667,12 @@ class WorkItemOperations(AzureDevOps):
     def calculate_fair_efficiency_metrics(self, 
                                          work_item: Dict,
                                          state_history: List[Dict], 
-                                         state_config: Optional[Dict] = None) -> Dict:
+                                         state_config: Optional[Dict] = None,
+                                         timeframe_start: Optional[str] = None,
+                                         timeframe_end: Optional[str] = None) -> Dict:
         """Delegate to efficiency calculator module with state configuration."""
         return self.efficiency_calculator.calculate_fair_efficiency_metrics(
-            work_item, state_history, state_config
+            work_item, state_history, state_config, timeframe_start, timeframe_end
         )
     
     
@@ -1308,7 +1322,7 @@ class WorkItemOperations(AzureDevOps):
                         continue
                         
                     efficiency = self.calculate_fair_efficiency_metrics(
-                        item, item.get("revisions", []), state_config
+                        item, item.get("revisions", []), state_config, start_date, end_date
                     )
                     item["efficiency"] = efficiency
                     

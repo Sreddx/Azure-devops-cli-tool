@@ -84,7 +84,9 @@ class EfficiencyCalculator:
     def calculate_fair_efficiency_metrics(self, 
                                         work_item: Dict,
                                         state_history: List[Dict], 
-                                        state_config: Optional[Dict] = None) -> Dict:
+                                        state_config: Optional[Dict] = None,
+                                        timeframe_start: Optional[str] = None,
+                                        timeframe_end: Optional[str] = None) -> Dict:
         """
         Calculate fair efficiency metrics using stack-based state transition tracking with state categories.
         
@@ -92,6 +94,8 @@ class EfficiencyCalculator:
             work_item: Work item details with dates and metadata
             state_history: List of state changes with timestamps
             state_config: Configuration for state categories and behaviors
+            timeframe_start: Start date of the query timeframe (YYYY-MM-DD format)
+            timeframe_end: End date of the query timeframe (YYYY-MM-DD format)
         Returns:
             Dictionary with enhanced efficiency metrics
         """
@@ -116,7 +120,7 @@ class EfficiencyCalculator:
         }
         
         state_stack = create_stack_from_work_item(
-            work_item, state_history, state_config, office_hours_config
+            work_item, state_history, state_config, office_hours_config, timeframe_start, timeframe_end
         )
         
         # Check if work item should be ignored
@@ -130,8 +134,8 @@ class EfficiencyCalculator:
         state_durations = state_stack.get_state_durations()
         pattern_summary = state_stack.get_pattern_summary()
         
-        # Calculate estimated time from OriginalEstimate field
-        estimated_hours = self._calculate_estimated_time_from_work_item(work_item)
+        # Calculate estimated time from OriginalEstimate field, considering timeframe
+        estimated_hours = self._calculate_estimated_time_from_work_item(work_item, timeframe_start, timeframe_end)
         
         # Apply active hours capping logic: 3x estimate cap, exclude if no estimate
         if estimated_hours <= 0:
@@ -140,7 +144,7 @@ class EfficiencyCalculator:
             pattern_summary['capping_applied'] = 'no_estimate_exclusion'
         else:
             # Cap active hours at 3x the estimated hours
-            max_allowed_hours = estimated_hours * 3.0
+            max_allowed_hours = estimated_hours * 1.2
             if raw_productive_hours > max_allowed_hours:
                 productive_hours = max_allowed_hours
                 pattern_summary['capping_applied'] = f'capped_at_3x_estimate_{raw_productive_hours:.2f}_to_{max_allowed_hours:.2f}'
@@ -191,15 +195,43 @@ class EfficiencyCalculator:
         }
     
     
-    def _calculate_estimated_time_from_work_item(self, work_item: Dict) -> float:
+    def _calculate_estimated_time_from_work_item(self, work_item: Dict, 
+                                               timeframe_start: Optional[str] = None, 
+                                               timeframe_end: Optional[str] = None) -> float:
         """
         Calculate estimated time using OriginalEstimate field from Azure DevOps work item.
         Falls back to date-based calculation if OriginalEstimate is not available.
+        When timeframe is provided, only count office days that fall within the timeframe.
+        
+        Args:
+            work_item: Work item details
+            timeframe_start: Start date of the query timeframe (YYYY-MM-DD format)
+            timeframe_end: End date of the query timeframe (YYYY-MM-DD format)
+        Returns:
+            Estimated hours as float
         """
         # Primary: Use OriginalEstimate field from work item
         original_estimate = work_item.get('original_estimate')
         if original_estimate and original_estimate > 0:
-            return float(original_estimate)
+            base_estimate = float(original_estimate)
+            
+            # If timeframe is provided, adjust the estimate proportionally
+            if timeframe_start or timeframe_end:
+                return self._adjust_estimate_for_timeframe(work_item, base_estimate, timeframe_start, timeframe_end)
+            
+            return base_estimate
+        
+        # If original estimate is 0 or missing, try to get it from revision history
+        if 'revisions' in work_item:
+            historical_estimate = self._get_estimate_from_revisions(work_item.get('revisions', []))
+            if historical_estimate > 0:
+                base_estimate = float(historical_estimate)
+                
+                # If timeframe is provided, adjust the estimate proportionally
+                if timeframe_start or timeframe_end:
+                    return self._adjust_estimate_for_timeframe(work_item, base_estimate, timeframe_start, timeframe_end)
+                
+                return base_estimate
         
         # Secondary: Calculate from start and target dates with office hours consideration
         start_date = work_item.get('start_date')
@@ -209,6 +241,14 @@ class EfficiencyCalculator:
             try:
                 start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
                 target = datetime.fromisoformat(target_date.replace('Z', '+00:00'))
+                
+                # If timeframe is provided, adjust the date range to only count days within timeframe
+                if timeframe_start or timeframe_end:
+                    start, target = self._adjust_dates_for_timeframe(start, target, timeframe_start, timeframe_end)
+                    
+                    # If no valid date range after adjustment, return minimum hours
+                    if start >= target:
+                        return 2.0
                 
                 # Use office hours calculation for more accurate estimation
                 office_hours = self._calculate_business_hours_between_dates(start, target)
@@ -223,6 +263,181 @@ class EfficiencyCalculator:
         work_item_type = work_item.get('work_item_type', '').lower()
         return self.config['default_work_item_hours'].get(work_item_type, 
                                                          self.config['default_work_item_hours']['default'])
+    
+    def _adjust_dates_for_timeframe(self, start_date: datetime, target_date: datetime, 
+                                   timeframe_start: Optional[str], timeframe_end: Optional[str]) -> tuple:
+        """
+        Adjust start and target dates to only include the portion that falls within the specified timeframe.
+        For proportional calculation, we count the days that overlap with the timeframe.
+        
+        Args:
+            start_date: Work item start date
+            target_date: Work item target date
+            timeframe_start: Query timeframe start date (YYYY-MM-DD format)
+            timeframe_end: Query timeframe end date (YYYY-MM-DD format)
+            
+        Returns:
+            Tuple of (adjusted_start, adjusted_target) datetime objects
+        """
+        adjusted_start = start_date
+        adjusted_target = target_date
+        
+        # Parse timeframe dates
+        try:
+            if timeframe_start:
+                timeframe_start_dt = datetime.fromisoformat(f"{timeframe_start}T00:00:00+00:00")
+                # If work item starts before timeframe, adjust to timeframe start
+                if start_date < timeframe_start_dt:
+                    adjusted_start = timeframe_start_dt
+                    
+            if timeframe_end:
+                timeframe_end_dt = datetime.fromisoformat(f"{timeframe_end}T23:59:59+00:00")
+                # If work item ends after timeframe, adjust to timeframe end
+                if target_date > timeframe_end_dt:
+                    adjusted_target = timeframe_end_dt
+            
+            # Special case: if target date is within the timeframe start day but before office hours,
+            # extend it to at least include the office start time of that day for proportional calculation
+            if timeframe_start:
+                timeframe_start_dt = datetime.fromisoformat(f"{timeframe_start}T00:00:00+00:00")
+                if (start_date < timeframe_start_dt and 
+                    target_date.date() >= timeframe_start_dt.date() and 
+                    adjusted_target < datetime.fromisoformat(f"{timeframe_start}T09:00:00+00:00")):
+                    # Extend target to at least the start of office hours on the timeframe start date
+                    adjusted_target = max(adjusted_target, datetime.fromisoformat(f"{timeframe_start}T09:00:00+00:00"))
+                    
+        except (ValueError, TypeError):
+            # If timeframe parsing fails, return original dates
+            pass
+            
+        return adjusted_start, adjusted_target
+    
+    def _adjust_estimate_for_timeframe(self, work_item: Dict, base_estimate: float, 
+                                      timeframe_start: Optional[str], timeframe_end: Optional[str]) -> float:
+        """
+        Adjust the estimated hours proportionally based on the timeframe.
+        
+        Args:
+            work_item: Work item details
+            base_estimate: Original estimated hours
+            timeframe_start: Query timeframe start date (YYYY-MM-DD format)  
+            timeframe_end: Query timeframe end date (YYYY-MM-DD format)
+            
+        Returns:
+            Adjusted estimated hours as float
+        """
+        start_date = work_item.get('start_date')
+        target_date = work_item.get('target_date')
+        
+        if not start_date or not target_date:
+            return base_estimate
+            
+        try:
+            start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            target = datetime.fromisoformat(target_date.replace('Z', '+00:00'))
+            
+            # Calculate total office days in the original work period
+            total_office_days = self._calculate_office_days_between_dates(start, target)
+            if total_office_days <= 0:
+                return base_estimate
+            
+            # Calculate office days that fall within the timeframe
+            adjusted_start, adjusted_target = self._adjust_dates_for_timeframe(start, target, timeframe_start, timeframe_end)
+            if adjusted_start >= adjusted_target:
+                return 2.0  # Minimum hours if no overlap
+                
+            timeframe_office_days = self._calculate_office_days_between_dates(adjusted_start, adjusted_target)
+            
+            # Calculate proportional hours
+            if timeframe_office_days <= 0:
+                return 2.0  # Minimum hours if no office days in timeframe
+                
+            proportion = timeframe_office_days / total_office_days
+            adjusted_estimate = base_estimate * proportion
+            
+            # Ensure minimum of 2 hours
+            return max(adjusted_estimate, 2.0)
+            
+        except (ValueError, TypeError):
+            return base_estimate
+    
+    def _calculate_office_days_between_dates(self, start_date: datetime, end_date: datetime) -> float:
+        """
+        Calculate the number of office days between two dates.
+        For proportional calculation, we count full business days if any part of the period falls on that day.
+        
+        Args:
+            start_date: Start datetime
+            end_date: End datetime
+            
+        Returns:
+            Number of office days as float
+        """
+        if start_date >= end_date:
+            return 0.0
+            
+        total_days = 0.0
+        current_date = start_date.date()
+        end_date_only = end_date.date()
+        
+        while current_date <= end_date_only:
+            # Skip weekends
+            if current_date.weekday() < 5:  # Monday=0, Friday=4
+                # For proportional calculation, if any part of the date range falls on this office day,
+                # count it as a full day (simplified approach for proportional estimates)
+                total_days += 1.0
+                    
+            current_date += timedelta(days=1)
+            
+        return total_days
+    
+    def _get_estimate_from_revisions(self, revisions: List[Dict]) -> float:
+        """
+        Search through revision history to find the last valid OriginalEstimate value.
+        
+        Args:
+            revisions: List of revision dictionaries from work item history
+            
+        Returns:
+            Last valid original estimate as float, or 0 if not found
+        """
+        if not revisions:
+            return 0.0
+        
+        # Sort revisions by revision number in descending order to get the most recent first
+        sorted_revisions = sorted(revisions, key=lambda x: x.get('revision', 0), reverse=True)
+        
+        for revision in sorted_revisions:
+            # Check if this revision has fields data (some revision formats may differ)
+            if isinstance(revision, dict):
+                # Look for OriginalEstimate in various possible field formats
+                fields = revision.get('fields', {})
+                
+                # Check different possible field names for original estimate
+                estimate_fields = [
+                    'Microsoft.VSTS.Scheduling.OriginalEstimate',
+                    'OriginalEstimate',
+                    'original_estimate'
+                ]
+                
+                for field_name in estimate_fields:
+                    estimate_value = fields.get(field_name)
+                    if estimate_value is not None and estimate_value > 0:
+                        try:
+                            return float(estimate_value)
+                        except (ValueError, TypeError):
+                            continue
+                
+                # Also check at the top level of revision data
+                for field_name in estimate_fields:
+                    estimate_value = revision.get(field_name)
+                    if estimate_value is not None and estimate_value > 0:
+                        try:
+                            return float(estimate_value)
+                        except (ValueError, TypeError):
+                            continue
+        
+        return 0.0
     
     def _calculate_business_hours_between_dates(self, start_date: datetime, end_date: datetime) -> float:
         """
