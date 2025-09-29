@@ -925,7 +925,9 @@ class WorkItemOperations(AzureDevOps):
         # Use provided total or fallback to filtered items count
         total_items = total_assigned_items if total_assigned_items is not None else len(work_items)
         completed_items = 0
-        items_with_efficiency = 0  # Only completed items have efficiency data
+        items_with_efficiency = 0  # Only items with active_time > 0 AND estimated_hours > 0
+        items_with_estimated = 0  # Items with estimated_hours > 0 (for confidence calculation)
+        items_with_data = 0  # All completed items with efficiency data
         on_time_count = 0
         total_fair_efficiency = 0
         total_delivery_score = 0
@@ -935,34 +937,46 @@ class WorkItemOperations(AzureDevOps):
         reopened_items = 0
         work_item_types = set()
         projects = set()
-        
+
         delivery_timing_counts = {
-            'early': 0, 'on_time': 0, 'late_1_3': 0, 
+            'early': 0, 'on_time': 0, 'late_1_3': 0,
             'late_4_7': 0, 'late_8_14': 0, 'late_15_plus': 0
         }
-        
+
         for item in work_items:
             # Basic counts
             work_item_types.add(item.get('work_item_type', 'Unknown'))
             projects.add(item.get('project_name', 'Unknown'))
-            
+
             if item.get('state', '').lower() in ['closed', 'done', 'resolved']:
                 completed_items += 1
-            
-            # Efficiency metrics (only for items with efficiency data - completed items)
+
+            # All metrics except efficiency (for all completed items)
             efficiency_data = item.get('efficiency', {})
             if efficiency_data and any(efficiency_data.values()):  # Has meaningful efficiency data
-                items_with_efficiency += 1
-                total_fair_efficiency += efficiency_data.get('fair_efficiency_score', 0)
+                items_with_data += 1
+                active_time = efficiency_data.get('active_time_hours', 0)
+                estimated_hours_item = efficiency_data.get('estimated_time_hours', 0)
+
+                # Track items with estimated hours > 0 for confidence calculation
+                if estimated_hours_item > 0:
+                    items_with_estimated += 1
+
+                # Efficiency calculation: ONLY for items with active_time > 0 AND estimated_hours > 0
+                if active_time > 0 and estimated_hours_item > 0:
+                    items_with_efficiency += 1
+                    total_fair_efficiency += efficiency_data.get('fair_efficiency_score', 0)
+
+                # Everything else: ALL items with efficiency data
                 total_delivery_score += efficiency_data.get('delivery_score', 100)
-                total_active_hours += efficiency_data.get('active_time_hours', 0)
+                total_active_hours += active_time
                 total_estimated_hours += efficiency_data.get('estimated_time_hours', 0)
                 total_days_ahead_behind += efficiency_data.get('days_ahead_behind', 0)
-                
+
                 if efficiency_data.get('was_reopened', False):
                     reopened_items += 1
-                
-                # Delivery timing analysis (only for completed items)
+
+                # Delivery timing analysis: items with efficiency data only
                 days_diff = efficiency_data.get('days_ahead_behind', 0)
                 if days_diff <= 0:
                     if days_diff <= -1:
@@ -978,20 +992,31 @@ class WorkItemOperations(AzureDevOps):
                     delivery_timing_counts['late_8_14'] += 1
                 else:
                     delivery_timing_counts['late_15_plus'] += 1
-        
+
         # Calculate averages and percentages
         completion_rate = (completed_items / total_items) * 100 if total_items > 0 else 0
-        
-        # Efficiency metrics based only on completed items with efficiency data
+
+        # Efficiency: ONLY from items with active_time > 0 AND estimated_hours > 0
         if items_with_efficiency > 0:
-            on_time_delivery = (on_time_count / items_with_efficiency) * 100
             avg_fair_efficiency = total_fair_efficiency / items_with_efficiency
-            avg_delivery_score = total_delivery_score / items_with_efficiency
-            avg_days_ahead_behind = total_days_ahead_behind / items_with_efficiency
-            reopened_rate = (reopened_items / items_with_efficiency) * 100
+
+            # Apply confidence adjustment to efficiency based on sample size
+            # Confidence = items with active time / items with estimated hours > 0
+            confidence = items_with_efficiency / items_with_estimated if items_with_estimated > 0 else 0
+            confidence_factor = min(1.0, confidence * 3)  # Factor of 3, capped at 100%
+            avg_fair_efficiency = avg_fair_efficiency * confidence_factor
+        else:
+            avg_fair_efficiency = 0
+            confidence = 0
+
+        # Everything else: from ALL items with efficiency data
+        if items_with_data > 0:
+            on_time_delivery = (on_time_count / items_with_data) * 100
+            avg_delivery_score = total_delivery_score / items_with_data
+            avg_days_ahead_behind = total_days_ahead_behind / items_with_data
+            reopened_rate = (reopened_items / items_with_data) * 100
         else:
             on_time_delivery = 0
-            avg_fair_efficiency = 0
             avg_delivery_score = 0
             avg_days_ahead_behind = 0
             reopened_rate = 0
@@ -1004,6 +1029,8 @@ class WorkItemOperations(AzureDevOps):
         return {
             'total_work_items': total_items,
             'completed_items': completed_items,
+            'items_with_efficiency': items_with_efficiency,
+            'sample_confidence': round(confidence * 100, 2) if items_with_efficiency > 0 else 0,
             'completion_rate': round(completion_rate, 2),
             'on_time_delivery_percentage': round(on_time_delivery, 2),
             'average_fair_efficiency': round(avg_fair_efficiency, 2),
@@ -1026,6 +1053,8 @@ class WorkItemOperations(AzureDevOps):
         return {
             'total_work_items': total_assigned_items or 0,
             'completed_items': 0,
+            'items_with_efficiency': 0,
+            'sample_confidence': 0,
             'completion_rate': 0,
             'on_time_delivery_percentage': 0,
             'average_fair_efficiency': 0,
@@ -1600,13 +1629,13 @@ class WorkItemOperations(AzureDevOps):
                 fieldnames = [
                     'ID', 'Title', 'Project Name', 'Assigned To', 'State', 'Work Item Type',
                     'Start Date', 'Target Date', 'Closed Date', 'Estimated Hours',
-                    'Active Time (Hours)', 'Blocked Time (Hours)', 'Traditional Efficiency',
-                    'Fair Efficiency Score', 'Delivery Score', 'Days Ahead/Behind Target',
+                    'Active Time (Hours)', 'Blocked Time (Hours)', 'Efficiency %',
+                    'Delivery Score', 'Days Ahead/Behind Target',
                     'Completion Bonus', 'Timing Bonus', 'Was Reopened', 'Active After Reopen'
                 ]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
-                
+
                 for item in work_items:
                     efficiency = item.get("efficiency", {})
                     writer.writerow({
@@ -1622,8 +1651,7 @@ class WorkItemOperations(AzureDevOps):
                         'Estimated Hours': efficiency.get('estimated_time_hours', 0),
                         'Active Time (Hours)': efficiency.get('active_time_hours', 0),
                         'Blocked Time (Hours)': efficiency.get('blocked_time_hours', 0),
-                        'Traditional Efficiency': efficiency.get('efficiency_percentage', 0),
-                        'Fair Efficiency Score': efficiency.get('fair_efficiency_score', 0),
+                        'Efficiency %': efficiency.get('efficiency_percentage', 0),
                         'Delivery Score': efficiency.get('delivery_score', 0),
                         'Days Ahead/Behind Target': efficiency.get('days_ahead_behind', 0),
                         'Completion Bonus': efficiency.get('completion_bonus', 0),
@@ -1641,25 +1669,28 @@ class WorkItemOperations(AzureDevOps):
             if developer_metrics:
                 with open(summary_filename, 'w', newline='', encoding='utf-8') as csvfile:
                     fieldnames = [
-                        'Developer', 'Total Work Items', 'Completed Items', 'Completion Rate %',
-                        'On-Time Delivery %', 'Average Fair Efficiency', 'Average Delivery Score',
-                        'Overall Developer Score', 'Total Active Hours', 'Total Estimated Hours',
-                        'Avg Days Ahead/Behind', 'Reopened Items Handled', 'Reopened Rate %',
-                        'Work Item Types', 'Projects Count', 'Early Deliveries', 'On-Time Deliveries',
-                        'Late 1-3 Days', 'Late 4-7 Days', 'Late 8-14 Days', 'Late 15+ Days'
+                        'Developer', 'Total Work Items', 'Completed Items', 'Items With Active Time',
+                        'Sample Confidence %', 'Completion Rate %', 'On-Time Delivery %',
+                        'Average Efficiency %', 'Average Delivery Score', 'Overall Developer Score',
+                        'Total Active Hours', 'Total Estimated Hours', 'Avg Days Ahead/Behind',
+                        'Reopened Items Handled', 'Reopened Rate %', 'Work Item Types', 'Projects Count',
+                        'Early Deliveries', 'On-Time Deliveries', 'Late 1-3 Days', 'Late 4-7 Days',
+                        'Late 8-14 Days', 'Late 15+ Days'
                     ]
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                     writer.writeheader()
-                    
+
                     for developer, metrics in developer_metrics.items():
                         timing = metrics.get('delivery_timing_breakdown', {})
                         writer.writerow({
                             'Developer': developer,
                             'Total Work Items': metrics.get('total_work_items', 0),
                             'Completed Items': metrics.get('completed_items', 0),
+                            'Items With Active Time': metrics.get('items_with_efficiency', 0),
+                            'Sample Confidence %': metrics.get('sample_confidence', 0),
                             'Completion Rate %': metrics.get('completion_rate', 0),
                             'On-Time Delivery %': metrics.get('on_time_delivery_percentage', 0),
-                            'Average Fair Efficiency': metrics.get('average_fair_efficiency', 0),
+                            'Average Efficiency %': metrics.get('average_fair_efficiency', 0),
                             'Average Delivery Score': metrics.get('average_delivery_score', 0),
                             'Overall Developer Score': metrics.get('overall_developer_score', 0),
                             'Total Active Hours': metrics.get('total_active_hours', 0),

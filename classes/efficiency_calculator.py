@@ -53,10 +53,10 @@ class EfficiencyCalculator:
                 'late_15_plus': 8.0
             },
             'developer_score_weights': {
-                'fair_efficiency': 0.4,    # 40%
-                'delivery_score': 0.3,     # 30%
-                'completion_rate': 0.2,    # 20%
-                'on_time_delivery': 0.1    # 10%
+                'fair_efficiency': 0.25,   # 25% (reduced from 40%, adjusted by confidence)
+                'delivery_score': 0.50,    # 50% (increased from 30%, most stable metric)
+                'completion_rate': 0.15,   # 15% (reduced from 20%)
+                'on_time_delivery': 0.10   # 10% (unchanged)
             },
             'default_work_item_hours': {
                 'user story': 8.0,   # 1 day (reduced from 16)
@@ -137,17 +137,17 @@ class EfficiencyCalculator:
         # Calculate estimated time from OriginalEstimate field, considering timeframe
         estimated_hours = self._calculate_estimated_time_from_work_item(work_item, timeframe_start, timeframe_end)
         
-        # Apply active hours capping logic: 3x estimate cap, exclude if no estimate
+        # Apply active hours capping logic: 1.2x estimate cap, exclude if no estimate
         if estimated_hours <= 0:
             # If no estimate hours, don't count active time
             productive_hours = 0
             pattern_summary['capping_applied'] = 'no_estimate_exclusion'
         else:
-            # Cap active hours at 1.5x the estimated hours
-            max_allowed_hours = estimated_hours * 1.5
+            # Cap active hours at 1.2x the estimated hours
+            max_allowed_hours = estimated_hours * 1.2
             if raw_productive_hours > max_allowed_hours:
                 productive_hours = max_allowed_hours
-                pattern_summary['capping_applied'] = f'capped_at_1.5x_estimate_{raw_productive_hours:.2f}_to_{max_allowed_hours:.2f}'
+                pattern_summary['capping_applied'] = f'capped_at_1.2x_estimate_{raw_productive_hours:.2f}_to_{max_allowed_hours:.2f}'
             else:
                 productive_hours = raw_productive_hours
                 pattern_summary['capping_applied'] = 'no_capping_needed'
@@ -158,19 +158,28 @@ class EfficiencyCalculator:
         # Calculate completion bonus
         is_completed = work_item.get('state', '').lower() in ['closed', 'done', 'resolved']
         completion_bonus = (estimated_hours * self.config['completion_bonus_percentage']) if is_completed else 0
-        
-        # Calculate fair efficiency score with bonuses
-        numerator = productive_hours + completion_bonus + delivery_metrics['timing_bonus_hours']
+
+        # Calculate traditional efficiency (estimated time vs active time)
+        # INVERTED: Higher percentage = better efficiency
+        # 100% = used exactly estimated time
+        # >100% = completed faster than estimated (efficient)
+        # <100% = took longer than estimated (inefficient)
+        if productive_hours > 0 and estimated_hours > 0:
+            traditional_efficiency = (estimated_hours / productive_hours) * 100
+            traditional_efficiency = min(traditional_efficiency, self.config['max_efficiency_cap'])
+        else:
+            traditional_efficiency = 0
+
+        # Calculate fair efficiency score with completion bonus only
+        # Timing bonuses are reflected in delivery_score, not efficiency
+        numerator = productive_hours + completion_bonus
         denominator = estimated_hours + delivery_metrics['late_penalty_mitigation']
-        
+
         if denominator > 0:
             fair_efficiency = (numerator / denominator) * 100
             fair_efficiency = min(fair_efficiency, self.config['max_efficiency_cap'])
         else:
             fair_efficiency = 0
-        
-        # Traditional efficiency for comparison (productive time vs total time excluding paused)
-        traditional_efficiency = (productive_hours / (total_hours - paused_hours)) * 100 if (total_hours - paused_hours) > 0 else 0
         
         return {
             "active_time_hours": round(productive_hours, 2),
