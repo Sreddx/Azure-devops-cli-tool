@@ -448,7 +448,7 @@ def main():
     
     # Developer scoring configuration
     parser.add_argument("--scoring-config", help="Path to JSON file with custom scoring configuration")
-    parser.add_argument("--completion-bonus", type=float, help="Completion bonus percentage (default: 0.20 = 20%)")
+    parser.add_argument("--completion-bonus", type=float, help="Completion bonus percentage (default: 0.20 = 20 percent)")
     parser.add_argument("--max-efficiency-cap", type=float, help="Maximum efficiency cap percentage (default: 150.0)")
     parser.add_argument("--max-hours-per-day", type=float, help="Maximum business hours per day (default: 10.0)")
     parser.add_argument("--fair-efficiency-weight", type=float, help="Fair efficiency weight in developer score (default: 0.4)")

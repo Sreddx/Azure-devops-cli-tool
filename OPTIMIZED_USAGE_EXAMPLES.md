@@ -19,6 +19,9 @@
 
 ## 🚀 Usage Examples
 python run.py --query-work-items --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alejandro Valenzuela,Gerardo Melgoza,Hanz Izarraraz,Osvaldo de Luna,Uriel Cortés,Emmanuel Pérez,Fernando Alcaraz,Damian Gaspar,Cristian Soria,Daniel Cayola,Ximena Segura" --start-date "2025-08-01" --end-date "2025-08-31" --optimized --export-csv "august_results.csv"
+
+python run.py --query-work-items --assigned-to "Luis Nocedal,Carlos Vazquez,Diego Lopez,Alejandro Valenzuela,Gerardo Melgoza,Hans Izarraraz,Osvaldo de Luna,Uriel Cortés,Emmanuel Pérez,Fernando Alcaraz,Damian Gaspar,Cristian Soria,Daniel Cayola,Ximena Segura, Andrés Escobedo, Alvaro Torres, Pablo Ruiz, Sebastián Rojas, Fernando Hernández" --start-date "2025-09-01" --end-date "2025-09-30" --optimized --export-csv "september_results.csv"
+
 ### Basic Optimized Query
 ```bash
 # Use optimized processing with default settings

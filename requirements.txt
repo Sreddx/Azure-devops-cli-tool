@@ -3,3 +3,5 @@ requests
 azure-devops
 argparse
 pytz
+pyodbc
+azure-identity

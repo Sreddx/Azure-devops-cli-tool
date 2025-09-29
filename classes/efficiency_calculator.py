@@ -143,11 +143,11 @@ class EfficiencyCalculator:
             productive_hours = 0
             pattern_summary['capping_applied'] = 'no_estimate_exclusion'
         else:
-            # Cap active hours at 3x the estimated hours
-            max_allowed_hours = estimated_hours * 1.2
+            # Cap active hours at 1.5x the estimated hours
+            max_allowed_hours = estimated_hours * 1.5
             if raw_productive_hours > max_allowed_hours:
                 productive_hours = max_allowed_hours
-                pattern_summary['capping_applied'] = f'capped_at_3x_estimate_{raw_productive_hours:.2f}_to_{max_allowed_hours:.2f}'
+                pattern_summary['capping_applied'] = f'capped_at_1.5x_estimate_{raw_productive_hours:.2f}_to_{max_allowed_hours:.2f}'
             else:
                 productive_hours = raw_productive_hours
                 pattern_summary['capping_applied'] = 'no_capping_needed'
@@ -199,70 +199,31 @@ class EfficiencyCalculator:
                                                timeframe_start: Optional[str] = None, 
                                                timeframe_end: Optional[str] = None) -> float:
         """
-        Calculate estimated time using OriginalEstimate field from Azure DevOps work item.
-        Falls back to date-based calculation if OriginalEstimate is not available.
+        Calculate estimated time using OriginalEstimate field from Fabric Logic App only.
+        No fallback to DevOps API or date-based calculation - Fabric is the single source.
         When timeframe is provided, only count office days that fall within the timeframe.
-        
+
         Args:
-            work_item: Work item details
+            work_item: Work item with original_estimate set by Fabric Logic App
             timeframe_start: Start date of the query timeframe (YYYY-MM-DD format)
             timeframe_end: End date of the query timeframe (YYYY-MM-DD format)
         Returns:
-            Estimated hours as float
+            Estimated hours as float (0 if no estimate from Fabric)
         """
-        # Primary: Use OriginalEstimate field from work item
+        # Use OriginalEstimate field from Fabric Logic App only
         original_estimate = work_item.get('original_estimate')
-        if original_estimate and original_estimate > 0:
+        if original_estimate is not None and original_estimate > 0:
             base_estimate = float(original_estimate)
-            
-            # If timeframe is provided, adjust the estimate proportionally
-            if timeframe_start or timeframe_end:
-                return self._adjust_estimate_for_timeframe(work_item, base_estimate, timeframe_start, timeframe_end)
-            
+
+            # # If timeframe is provided, adjust the estimate proportionally
+            # if timeframe_start or timeframe_end:
+            #     return self._adjust_estimate_for_timeframe(work_item, base_estimate, timeframe_start, timeframe_end)
+
             return base_estimate
-        
-        # If original estimate is 0 or missing, try to get it from revision history
-        if 'revisions' in work_item:
-            historical_estimate = self._get_estimate_from_revisions(work_item.get('revisions', []))
-            if historical_estimate > 0:
-                base_estimate = float(historical_estimate)
-                
-                # If timeframe is provided, adjust the estimate proportionally
-                if timeframe_start or timeframe_end:
-                    return self._adjust_estimate_for_timeframe(work_item, base_estimate, timeframe_start, timeframe_end)
-                
-                return base_estimate
-        
-        # Secondary: Calculate from start and target dates with office hours consideration
-        start_date = work_item.get('start_date')
-        target_date = work_item.get('target_date')
-        
-        if start_date and target_date:
-            try:
-                start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-                target = datetime.fromisoformat(target_date.replace('Z', '+00:00'))
-                
-                # If timeframe is provided, adjust the date range to only count days within timeframe
-                if timeframe_start or timeframe_end:
-                    start, target = self._adjust_dates_for_timeframe(start, target, timeframe_start, timeframe_end)
-                    
-                    # If no valid date range after adjustment, return minimum hours
-                    if start >= target:
-                        return 2.0
-                
-                # Use office hours calculation for more accurate estimation
-                office_hours = self._calculate_business_hours_between_dates(start, target)
-                
-                # Minimum 2 hours for any work item
-                return max(office_hours, 2.0)
-                
-            except (ValueError, TypeError):
-                pass
-        
-        # Fallback: use work item type to estimate
-        work_item_type = work_item.get('work_item_type', '').lower()
-        return self.config['default_work_item_hours'].get(work_item_type, 
-                                                         self.config['default_work_item_hours']['default'])
+
+        # If Fabric Logic App doesn't provide an estimate, return 0
+        # Note: No fallback to DevOps API or revision history - Fabric is the only source
+        return 0.0
     
     def _adjust_dates_for_timeframe(self, start_date: datetime, target_date: datetime, 
                                    timeframe_start: Optional[str], timeframe_end: Optional[str]) -> tuple:

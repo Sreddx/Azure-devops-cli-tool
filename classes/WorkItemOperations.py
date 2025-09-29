@@ -2,6 +2,7 @@ from classes.AzureDevOps import AzureDevOps
 from classes.efficiency_calculator import EfficiencyCalculator
 from classes.project_discovery import ProjectDiscovery
 from config.config_loader import ConfigLoader
+from helpers.fabric_logic_app_helper import create_fabric_helper
 from datetime import datetime, timedelta
 import json
 from typing import List, Dict, Optional, Any
@@ -41,11 +42,63 @@ class WorkItemOperations(AzureDevOps):
         }
         self.efficiency_calculator = EfficiencyCalculator(combined_config)
         self.project_discovery = ProjectDiscovery(self)
-        
+
+        # Initialize Fabric Logic App helper
+        logic_app_url = "https://prod-10.northcentralus.logic.azure.com:443/workflows/9e4bccaa8aab448083f7b95d55db8660/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=PgB2Drl6tRQ7Ki418LzCop5QV3wtpVhpVBoiW3I2mS4"
+        self.fabric_helper = create_fabric_helper(logic_app_url)
+
         # Project caching
         self.projects_cache_file = "projects_cache.json"
-    
-    
+
+    def _enrich_work_items_with_fabric_estimates(self, work_items: List[Dict]) -> None:
+        """
+        Set original_estimate for work items using Fabric Logic App as the only source.
+        No fallback to DevOps API - Fabric Logic App is the single source of truth.
+        """
+        if not work_items:
+            return
+
+        # Extract work item IDs
+        work_item_ids = [str(item['id']) for item in work_items]
+
+        print(f"   Fetching estimated hours for {len(work_item_ids)} work items from Logic App...")
+
+        try:
+            # Call Logic App to get estimated hours
+            fabric_response = self.fabric_helper.get_estimated_hours_by_ids(work_item_ids)
+
+            # Parse Logic App response
+            if fabric_response and 'ResultSets' in fabric_response:
+                fabric_work_items = fabric_response['ResultSets']['Table1']
+
+                # Create lookup dictionary: WorkItemId -> estimated hours
+                fabric_estimates = {}
+                for fabric_item in fabric_work_items:
+                    work_item_id = str(fabric_item.get('WorkItemId', ''))
+                    estimated_hours = fabric_item.get('OriginalEstimate')
+
+                    # Store all estimates from Fabric (including 0 and null)
+                    fabric_estimates[work_item_id] = estimated_hours
+
+                # Set original_estimate from Fabric only (including 0, null, or any value)
+                enriched_count = 0
+                for item in work_items:
+                    work_item_id = str(item['id'])
+                    if work_item_id in fabric_estimates:
+                        item['original_estimate'] = fabric_estimates[work_item_id]
+                        item['fabric_enriched'] = True
+                        enriched_count += 1
+
+                print(f"   ✅ Set estimates for {enriched_count} work items from Fabric Logic App")
+
+            else:
+                print(f"   ⚠️ Unexpected Logic App response format: {fabric_response}")
+
+        except Exception as e:
+            print(f"   ❌ Error fetching from Logic App: {e}")
+            print(f"   Continuing with DevOps API estimates...")
+
+
     def get_all_projects(self) -> List[Dict]:
         """Delegate to project discovery module."""
         return self.project_discovery.get_all_projects()
@@ -135,11 +188,26 @@ class WorkItemOperations(AzureDevOps):
                 states_str = "', '".join(all_states)
                 target_condition_parts = [f"[System.State] IN ('{states_str}')"]
                 
-                # Primary filter: Target date must be within EXACT range (no margin)
-                if start_date:
-                    target_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'")
-                if end_date:
-                    target_condition_parts.append(f"[Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'")
+                # Primary filter: Start date OR Target date must be within EXACT range (no margin)
+                date_filter_parts = []
+                if start_date and end_date:
+                    date_filter_parts.append(f"""(
+                        ([Microsoft.VSTS.Scheduling.StartDate] >= '{start_date}' AND [Microsoft.VSTS.Scheduling.StartDate] <= '{end_date}') OR
+                        ([Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}' AND [Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}')
+                    )""")
+                elif start_date:
+                    date_filter_parts.append(f"""(
+                        [Microsoft.VSTS.Scheduling.StartDate] >= '{start_date}' OR
+                        [Microsoft.VSTS.Scheduling.TargetDate] >= '{start_date}'
+                    )""")
+                elif end_date:
+                    date_filter_parts.append(f"""(
+                        [Microsoft.VSTS.Scheduling.StartDate] <= '{end_date}' OR
+                        [Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'
+                    )""")
+
+                if date_filter_parts:
+                    target_condition_parts.extend(date_filter_parts)
                 
                 if len(target_condition_parts) > 1:
                     date_conditions.append(f"({' AND '.join(target_condition_parts)})")
@@ -446,7 +514,7 @@ class WorkItemOperations(AzureDevOps):
                         "area_path": fields.get("System.AreaPath", ""),
                         "iteration_path": fields.get("System.IterationPath", ""),
                         # Enhanced fields from schema
-                        "original_estimate": fields.get("Microsoft.VSTS.Scheduling.OriginalEstimate", 0),
+                        "original_estimate": None,  # Will be set by Fabric Logic App only
                         "priority": fields.get("Microsoft.VSTS.Common.Priority", 0),
                         "reason": fields.get("System.Reason", ""),
                         "resolved_by": fields.get("Microsoft.VSTS.Common.ResolvedBy", {}).get("displayName", ""),
@@ -1085,7 +1153,7 @@ class WorkItemOperations(AzureDevOps):
                     "project_id": project_id if project_id else "Unknown",
                     "project_name": project_name,
                     # Enhanced fields
-                    "original_estimate": fields.get("Microsoft.VSTS.Scheduling.OriginalEstimate", 0),
+                    "original_estimate": None,  # Will be set by Fabric Logic App only
                     "priority": fields.get("Microsoft.VSTS.Common.Priority", 0),
                     "reason": fields.get("System.Reason", ""),
                     "resolved_by": fields.get("Microsoft.VSTS.Common.ResolvedBy", {}).get("displayName", ""),
@@ -1309,13 +1377,21 @@ class WorkItemOperations(AzureDevOps):
             performance_summary["optimization_strategies_used"].append("sequential_revision_fetching")
             performance_summary["processing_phases"]["revision_fetching"] = time.time() - phase_start
         
+        # Phase 3.5: Enrich with Fabric Logic App estimated hours
+        if calculate_efficiency:
+            phase_start = time.time()
+            print(f"\n📊 Phase 3.5: Enriching with estimated hours from Fabric...")
+            self._enrich_work_items_with_fabric_estimates(all_work_items)
+            performance_summary["processing_phases"]["fabric_enrichment"] = time.time() - phase_start
+            performance_summary["optimization_strategies_used"].append("fabric_estimated_hours")
+
         # Phase 4: Efficiency Calculation
         if calculate_efficiency:
             phase_start = time.time()
             print(f"\n🧮 Phase 4: Calculating efficiency metrics...")
-            
+
             state_config = self.config_loader.get_state_categories()
-            
+
             for item in all_work_items:
                 try:
                     if not self.config_loader.should_include_work_item_with_history(item, item.get("revisions", [])):
@@ -1524,7 +1600,7 @@ class WorkItemOperations(AzureDevOps):
                 fieldnames = [
                     'ID', 'Title', 'Project Name', 'Assigned To', 'State', 'Work Item Type',
                     'Start Date', 'Target Date', 'Closed Date', 'Estimated Hours',
-                    'Active Time (Hours)', 'Blocked Time (Hours)', 'Traditional Efficiency %',
+                    'Active Time (Hours)', 'Blocked Time (Hours)', 'Traditional Efficiency',
                     'Fair Efficiency Score', 'Delivery Score', 'Days Ahead/Behind Target',
                     'Completion Bonus', 'Timing Bonus', 'Was Reopened', 'Active After Reopen'
                 ]
@@ -1546,7 +1622,7 @@ class WorkItemOperations(AzureDevOps):
                         'Estimated Hours': efficiency.get('estimated_time_hours', 0),
                         'Active Time (Hours)': efficiency.get('active_time_hours', 0),
                         'Blocked Time (Hours)': efficiency.get('blocked_time_hours', 0),
-                        'Traditional Efficiency %': efficiency.get('efficiency_percentage', 0),
+                        'Traditional Efficiency': efficiency.get('efficiency_percentage', 0),
                         'Fair Efficiency Score': efficiency.get('fair_efficiency_score', 0),
                         'Delivery Score': efficiency.get('delivery_score', 0),
                         'Days Ahead/Behind Target': efficiency.get('days_ahead_behind', 0),

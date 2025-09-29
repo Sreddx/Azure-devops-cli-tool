@@ -2,7 +2,9 @@
   "work_item_query": {
     "states_to_fetch": [
       "New",
+      "To Do",
       "Active",
+      "Doing",
       "In Progress",
       "Development",
       "Code Review",
@@ -17,7 +19,7 @@
     ],
     "work_item_types": [
       "Task",
-      "Issue"
+      "Bugs"
     ],
     "date_field": "ClosedDate",
     "include_active_items": true,
@@ -25,21 +27,23 @@
   },
   "state_categories": {
     "assigned_states": [
-      "New"
+      "New",
+      "To Do"
     ],
     "productive_states": [
       "Active",
+      "Doing",
       "In Progress",
       "Development",
       "Code Review",
-      "Testing",
-      "Doing"
+      "Testing"
     ],
     "pause_stopper_states": [
       "Stopper",
       "Blocked",
       "On Hold",
-      "Waiting"
+      "Waiting",
+      "Pause"
     ],
     "completion_states": [
       "Resolved",
@@ -118,9 +122,10 @@
   },
   "state_transitions": {
     "assigned_condition": {
-      "description": "Work items with New state and start/target dates within query timeframe",
+      "description": "Work items with New or To Do state and start/target dates within query timeframe",
       "states": [
-        "New"
+        "New",
+        "To Do"
       ],
       "requires_date_in_range": true,
       "date_fields_to_check": [
@@ -132,6 +137,7 @@
       "description": "Work items that contribute to productivity metrics",
       "states": [
         "Active",
+        "Doing",
         "In Progress",
         "Development",
         "Code Review",
@@ -145,7 +151,8 @@
         "Stopper",
         "Blocked",
         "On Hold",
-        "Waiting"
+        "Waiting",
+        "Pause"
       ],
       "pauses_time_tracking": true,
       "counts_toward_efficiency": false
@@ -185,7 +192,7 @@
       "Active Time (Hours)",
       "Paused Time (Hours)",
       "Total Time (Hours)",
-      "Traditional Efficiency %",
+      "Traditional Efficiency",
       "Fair Efficiency Score",
       "Delivery Score",
       "Days Ahead/Behind Target",
