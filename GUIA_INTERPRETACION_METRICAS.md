@@ -1,85 +1,125 @@
 # Guía de Interpretación de Métricas - Azure DevOps CLI Tool
-
-## 📊 CSV Detallado por Work Item
-
-### Columnas Principales
-
-| Columna | Descripción | Valores Esperados |
-|---------|-------------|-------------------|
-| **Efficiency %** | (Estimado ÷ Activo) × 100 | >100% = eficiente, =100% = exacto, <100% = ineficiente, 0% = sin tiempo |
-| **Active Time (Hours)** | Horas trabajadas (cap 1.2x estimado) | 0 a 1.2× Estimated Hours |
-| **Delivery Score** | Puntualidad de entrega | 60-130 (130=muy anticipado, 100=puntual, 60=muy tarde) |
-| **Days Ahead/Behind Target** | Días antes(-)/después(+) objetivo | Negativo = anticipado, Positivo = tarde |
-| **Completion Bonus** | Bono por completar (20% estimado) | 0 o 20% de Estimated Hours |
-| **Timing Bonus** | Bono en horas por entrega anticipada | Depende de días adelantados |
-
-### Interpretación de Efficiency %
-
-- **> 100%** = ✅ **Eficiente** (completó más rápido que lo estimado)
-- **= 100%** = ⚖️ **En objetivo** (usó tiempo exacto)
-- **< 100%** = ⚠️ **Ineficiente** (tomó más tiempo del estimado)
-- **= 0%** = Sin tiempo registrado (común en checkpoints/dailys)
-
-**Ejemplos:**
-- 133% = Estimado 12h, usó 9h (muy eficiente)
-- 100% = Estimado 12h, usó 12h (exacto)
-- 83% = Estimado 12h, usó 14.4h (ineficiente)
-- 0% = Sin tiempo activo registrado
+## **VERSIÓN RESUMIDA CON PONDERACIONES**
 
 ---
 
-## 👤 CSV Resumen por Desarrollador
+## 🎯 **Overall Developer Score** (Métrica Principal)
 
-### Columnas y Significado
+### **Fórmula**
+```
+Score = (Avg Efficiency × 40%) + (Avg Delivery × 30%) + (Completion × 20%) + (On-Time × 10%)
+```
 
-| Columna | Descripción | Interpretación |
-|---------|-------------|----------------|
-| **Developer** | Nombre del desarrollador | - |
-| **Total Work Items** | Total de tareas asignadas | Todas las tareas en el período |
-| **Completed Items** | Tareas completadas | Estado: Closed/Done/Resolved |
-| **Items With Active Time** | Tareas con tiempo activo > 0 | Solo items donde se registró tiempo de trabajo |
-| **Completion Rate %** | % de completado | (Completed ÷ Total) × 100 |
-| **On-Time Delivery %** | % entregado a tiempo o antes | De las tareas completadas |
-| **Average Efficiency %** | Promedio de eficiencia | **Solo de items con Active Time > 0** |
-| **Average Delivery Score** | Promedio de puntualidad | 60-130, refleja timing |
-| **Overall Developer Score** | **Puntuación global** | **Métrica principal (0-100+)** |
-| **Total Active Hours** | Suma de horas trabajadas | Con cap de 1.2x por tarea |
-| **Total Estimated Hours** | Suma de horas estimadas | Total de todas las tareas |
-| **Avg Days Ahead/Behind** | Promedio días anticipado/tarde | Negativo = anticipado |
-| **Reopened Items/Rate** | Tareas reabiertas | Cantidad y % de reopened |
-| **Early/On-Time/Late** | Desglose de entregas | Cantidad por categoría de timing |
+### **Componentes**
+
+| Métrica | Peso | Qué Mide | Rango Típico | Benchmark Sept |
+|---------|------|----------|--------------|----------------|
+| **Avg Efficiency %** | **40%** | Velocidad vs estimado | 0-150% | 10-96% |
+| **Avg Delivery Score** | **30%** | Puntualidad de entrega | 60-130 | 70-105 |
+| **Completion Rate %** | **20%** | % tareas completadas | 0-100% | 27-97% |
+| **On-Time Delivery %** | **10%** | % a tiempo o antes | 0-100% | 13-79% |
+
+### **Rangos de Desempeño** (Basado en Datos Sept 2025)
+
+| Score | Nivel | Percentil | Acción |
+|-------|-------|-----------|---------|
+| **≥ 86** | 🟢 Excelente | Top 20% | Mantener |
+| **65-85** | 🟡 Bueno | 20-60% | Mejorar |
+| **55-64** | 🟠 Regular | 60-80% | Atención |
+| **< 55** | 🔴 Bajo | Bottom 20% | Urgente |
+
+**Datos Sept:** Fernando A. (97), Cristian S. (88), Andrés E. (86) vs Hans I. (54), Uriel C. (51), Luis N. (56)
 
 ---
 
-## 🎯 Overall Developer Score (Métrica Principal)
+## 📊 **Métricas Clave**
 
-### Fórmula de Cálculo
+### **1. Efficiency % (40% del Score)**
+- **>100%** = Más rápido que estimado ✅
+- **=100%** = Exacto ⚖️
+- **<100%** = Más lento ⚠️
+- **0%** = Sin tiempo registrado
+- **Importante:** Solo calcula items con Active Time > 0
 
-```
-Overall Score = (Average Efficiency % × 40%) +
-                (Average Delivery Score × 30%) +
-                (Completion Rate % × 20%) +
-                (On-Time Delivery % × 10%)
-```
+**Sept 2025:** Fernando A. (96%), Cristian S. (97%), Hans I. (10%), Gerardo M. (28%)
 
-### Componentes y Pesos
+### **2. Delivery Score (30% del Score)**
+- **120-130** = Muy anticipado (+3-4 días)
+- **100-119** = Puntual/anticipado
+- **90-99** = Ligeramente tarde (1-3 días)
+- **60-89** = Tarde (4+ días)
 
-| Factor | Peso | Qué Mide | Ejemplo |
-|--------|------|----------|---------|
-| **Average Efficiency %** | 40% | Velocidad de trabajo | 106% = 6% más rápido |
-| **Average Delivery Score** | 30% | Puntualidad | 108.7 = entregas anticipadas |
-| **Completion Rate %** | 20% | % tareas terminadas | 100% = todas completadas |
-| **On-Time Delivery %** | 10% | % a tiempo o antes | 74% = 3 de 4 a tiempo |
+**Sept 2025:** Fernando A. (106), Andrés E. (98), Cristian S. (95), Osvaldo D. (94)
 
-### Rangos de Interpretación
+### **3. Completion Rate (20% del Score)**
+- Promedio sept: **77%**
+- Top: **97-100%** (Gerardo M., Daniel C., Fernando A.)
+- Bajo: **27-43%** (Fernando H., Pablo R., Hans I.)
 
-| Score | Interpretación | Acción Recomendada |
-|-------|----------------|-------------------|
-| **≥ 80** | 🟢 Excelente | Mantener desempeño |
-| **70-79** | 🟡 Bueno | Pequeñas mejoras |
-| **60-69** | 🟠 Regular | Requiere atención |
-| **50-59** | 🔴 Bajo | Mejora inmediata |
-| **< 50** | ⚫ Crítico | Intervención necesaria |
+### **4. On-Time Delivery (10% del Score)**
+- **>70%** = Excelente (Fernando A. 75%, Andrés E. 79%)
+- **40-70%** = Bueno
+- **<40%** = Requiere mejora
+
+---
+
+## 📈 **Benchmarks Sept 2025**
+
+| Desarrollador | Score | Efficiency | Delivery | Completion | On-Time |
+|---------------|-------|-----------|----------|------------|---------|
+| Fernando Alcaraz | 97.3 | 96% | 106 | 85% | 75% |
+| Cristian Soria | 88.4 | 97% | 95 | 85% | 40% |
+| Andrés Escobedo | 86.5 | 62% | 98 | 94% | 79% |
+| Alvaro Torres | 86.6 | 71% | 97 | 90% | 72% |
+| Ximena Segura | 80.1 | 76% | 88 | 70% | 65% |
+| --- | --- | --- | --- | --- | --- |
+| Hans Izarraraz | 53.6 | 10% | 78 | 40% | 63% |
+| Uriel Cortés | 51.4 | 5% | 73 | 71% | 31% |
+| Luis Nocedal | 55.8 | 18% | 71 | 69% | 56% |
+
+**Promedio General:** Score 66.5 | Efficiency 42% | Delivery 85 | Completion 77% | On-Time 47%
+
+---
+
+## 🔍 **Interpretación Rápida**
+
+### **Efficiency %**
+- Solo cuenta items con tiempo registrado
+- Sept: 88% de items sin tiempo activo (checkpoints, dailys)
+- Cap: 1.2x estimado (protege contra registros excesivos)
+
+### **Items With Active Time**
+- Fundamental para Efficiency %
+- Sept: Rango 0-41 items con tiempo de 23-73 tareas totales
+- Sample Confidence: 0-91% (>25% = confiable)
+
+### **Delivery Categories** (Sept)
+- **Early:** 0-24 items
+- **On-Time:** 2-40 items
+- **Late 1-3 días:** 0-30 items
+- **Late 4-7 días:** 0-20 items
+- **Late 8-14 días:** 0-14 items
+- **Late 15+ días:** 0-25 items
+
+---
+
+## 💡 **Mejora Rápida del Score**
+
+| Acción | Impacto | Peso |
+|--------|---------|------|
+| Registrar tiempo correctamente | +Efficiency | **40%** |
+| Entregar anticipado | +Delivery | **30%** |
+| Completar tareas asignadas | +Completion | **20%** |
+| Cumplir deadlines | +On-Time | **10%** |
+
+---
+
+## ⚠️ **Notas Críticas**
+
+1. **Average Efficiency:** Solo items con Active Time > 0
+2. **Cap 1.2x:** Máximo 120% del tiempo estimado
+3. **Delivery Score:** Todas las tareas completadas
+4. **Sample Confidence:** % items con tiempo / total items
 
 ---
 
@@ -200,7 +240,7 @@ Overall Developer Score: 61.97
 
 ### Para Mejorar Efficiency % (40% del score)
 
-1. ✅ Registrar tiempo activo correctamente
+1. ✅ Registrar tiempo activo correctamente. Manejo de estados de tarea a tiempo y cierre de WI. 
 2. ✅ Estimar mejor las tareas (evitar sobrestimar)
 3. ✅ Minimizar interrupciones durante el trabajo
 4. ✅ Identificar y remover blockers rápidamente
@@ -230,6 +270,6 @@ Overall Developer Score: 61.97
 
 ## 📞 Soporte
 
-Para dudas sobre interpretación, cálculos o configuración del sistema, contactar al equipo técnico.
+Para dudas sobre interpretación, cálculos o configuración del sistema, contactar Sebastian Rojas. 
 
 **Última actualización:** Septiembre 2025
