@@ -1,0 +1,229 @@
+{
+  "work_item_query": {
+    "states_to_fetch": [
+      "New",
+      "To Do",
+      "Active",
+      "Doing",
+      "In Progress",
+      "Development",
+      "Code Review",
+      "Testing",
+      "Resolved",
+      "Closed",
+      "Done",
+      "Stopper",
+      "Blocked",
+      "On Hold",
+      "Waiting"
+    ],
+    "work_item_types": [
+      "Task",
+      "Bugs"
+    ],
+    "date_field": "ClosedDate",
+    "include_active_items": true,
+    "smart_filtering": true
+  },
+  "state_categories": {
+    "assigned_states": [
+      "New",
+      "To Do"
+    ],
+    "productive_states": [
+      "Active",
+      "Doing",
+      "In Progress",
+      "Development",
+      "Code Review",
+      "Testing"
+    ],
+    "pause_stopper_states": [
+      "Stopper",
+      "Blocked",
+      "On Hold",
+      "Waiting",
+      "Pause"
+    ],
+    "completion_states": [
+      "Resolved",
+      "Closed",
+      "Done"
+    ],
+    "ignored_states": [
+      "Removed",
+      "Discarded",
+      "Cancelled"
+    ]
+  },
+  "business_hours": {
+    "office_start_hour": 9,
+    "office_end_hour": 18,
+    "max_hours_per_day": 8,
+    "timezone": "America/Mexico_City",
+    "working_days": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "efficiency_scoring": {
+    "completion_bonus_percentage": 0.20,
+    "max_efficiency_cap": 150.0,
+    "early_delivery_thresholds": {
+      "very_early_days": 5,
+      "early_days": 3,
+      "slightly_early_days": 1
+    },
+    "early_delivery_scores": {
+      "very_early": 130.0,
+      "early": 120.0,
+      "slightly_early": 110.0,
+      "on_time": 100.0
+    },
+    "early_delivery_bonuses": {
+      "very_early": 1.0,
+      "early": 0.5,
+      "slightly_early": 0.25
+    },
+    "late_delivery_scores": {
+      "late_1_3": 95.0,
+      "late_4_7": 90.0,
+      "late_8_14": 85.0,
+      "late_15_plus": 70.0
+    },
+    "late_penalty_mitigation": {
+      "late_1_3": 2.0,
+      "late_4_7": 4.0,
+      "late_8_14": 6.0,
+      "late_15_plus": 8.0
+    }
+  },
+  "developer_scoring": {
+    "weights": {
+      "fair_efficiency": 0.2,
+      "delivery_score": 0.3,
+      "completion_rate": 0.3,
+      "on_time_delivery": 0.2
+    },
+    "minimum_items_for_scoring": 3
+  },
+  "work_item_defaults": {
+    "estimated_hours_by_type": {
+      "user story": 8.0,
+      "task": 4.0,
+      "bug": 2.0,
+      "feature": 16.0,
+      "default": 4.0
+    },
+    "minimum_estimate_hours": 1.0
+  },
+  "state_transitions": {
+    "assigned_condition": {
+      "description": "Work items with New or To Do state and start/target dates within query timeframe",
+      "states": [
+        "New",
+        "To Do"
+      ],
+      "requires_date_in_range": true,
+      "date_fields_to_check": [
+        "start_date",
+        "target_date"
+      ]
+    },
+    "active_condition": {
+      "description": "Work items that contribute to productivity metrics",
+      "states": [
+        "Active",
+        "Doing",
+        "In Progress",
+        "Development",
+        "Code Review",
+        "Testing"
+      ],
+      "counts_toward_efficiency": true
+    },
+    "pause_condition": {
+      "description": "Work items in pause/stopper states - time doesn't count toward efficiency",
+      "states": [
+        "Stopper",
+        "Blocked",
+        "On Hold",
+        "Waiting",
+        "Pause"
+      ],
+      "pauses_time_tracking": true,
+      "counts_toward_efficiency": false
+    },
+    "completion_condition": {
+      "description": "Work items that are completed - stops time accumulation",
+      "states": [
+        "Resolved",
+        "Closed",
+        "Done"
+      ],
+      "stops_time_tracking": true,
+      "eligible_for_completion_bonus": true
+    },
+    "ignore_condition": {
+      "description": "Work items to completely ignore from analysis",
+      "states": [
+        "Removed",
+        "Discarded",
+        "Cancelled"
+      ],
+      "exclude_from_analysis": true
+    }
+  },
+  "export_settings": {
+    "detailed_csv_fields": [
+      "ID",
+      "Title",
+      "Project Name",
+      "Assigned To",
+      "State",
+      "Work Item Type",
+      "Start Date",
+      "Target Date",
+      "Closed Date",
+      "Original Estimate Hours",
+      "Active Time (Hours)",
+      "Paused Time (Hours)",
+      "Total Time (Hours)",
+      "Traditional Efficiency",
+      "Fair Efficiency Score",
+      "Delivery Score",
+      "Days Ahead/Behind Target",
+      "Completion Bonus",
+      "Timing Bonus",
+      "Was Reopened",
+      "State Transitions Count"
+    ],
+    "developer_summary_fields": [
+      "Developer",
+      "Total Work Items",
+      "Completed Items",
+      "Ignored Items",
+      "Completion Rate %",
+      "On-Time Delivery %",
+      "Average Fair Efficiency",
+      "Average Delivery Score",
+      "Overall Developer Score",
+      "Total Active Hours",
+      "Total Paused Hours",
+      "Total Original Estimate Hours",
+      "Avg Days Ahead/Behind",
+      "Reopened Items Handled",
+      "Work Item Types",
+      "Projects Count"
+    ]
+  },
+  "debugging": {
+    "show_state_transitions": true,
+    "show_time_calculations": true,
+    "show_ignored_items": true,
+    "max_debug_items": 10
+  }
+}
