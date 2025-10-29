@@ -12,74 +12,25 @@ from classes.state_transition_stack import WorkItemStateStack, create_stack_from
 class EfficiencyCalculator:
     """Calculator for work item efficiency metrics and developer scoring."""
     
-    def __init__(self, scoring_config: Optional[Dict] = None):
+    def __init__(self, scoring_config: Dict):
         """
-        Initialize with configurable scoring parameters.
+        Initialize with configuration parameters from azure_devops_config.json.
         
         Args:
-            scoring_config: Dictionary with scoring configuration parameters
+            scoring_config: Dictionary with scoring configuration parameters loaded from JSON config.
+                          REQUIRED - must be loaded from azure_devops_config.json via ConfigLoader.
+        
+        Raises:
+            ValueError: If scoring_config is not provided or is empty
         """
-        # Default scoring configuration
-        self.config = {
-            'completion_bonus_percentage': 0.20,  # 20% of estimated time
-            'max_efficiency_cap': 150.0,  # Cap efficiency at 150%
-            'max_hours_per_day': 8.0,   # Maximum business hours per day (changed from 10)
-            'early_delivery_thresholds': {
-                'very_early_days': 7,
-                'early_days': 3,
-                'slightly_early_days': 1
-            },
-            'early_delivery_scores': {
-                'very_early': 130.0,
-                'early': 120.0,
-                'slightly_early': 110.0,
-                'on_time': 100.0
-            },
-            'early_delivery_bonuses': {
-                'very_early': 1.0,  # hours per day early
-                'early': 0.5,
-                'slightly_early': 0.25
-            },
-            'late_delivery_scores': {
-                'late_1_3': 90.0,
-                'late_4_7': 80.0,
-                'late_8_14': 70.0,
-                'late_15_plus': 60.0
-            },
-            'late_penalty_mitigation': {
-                'late_1_3': 2.0,
-                'late_4_7': 4.0,
-                'late_8_14': 6.0,
-                'late_15_plus': 8.0
-            },
-            'developer_score_weights': {
-                'fair_efficiency': 0.25,   # 25% (reduced from 40%, adjusted by confidence)
-                'delivery_score': 0.50,    # 50% (increased from 30%, most stable metric)
-                'completion_rate': 0.15,   # 15% (reduced from 20%)
-                'on_time_delivery': 0.10   # 10% (unchanged)
-            },
-            'default_work_item_hours': {
-                'user story': 8.0,   # 1 day (reduced from 16)
-                'task': 4.0,         # 0.5 day (reduced from 8) 
-                'bug': 2.0,          # 0.25 day (reduced from 4)
-                'default': 4.0       # 0.5 day (reduced from 8)
-            }
-        }
+        if not scoring_config:
+            raise ValueError(
+                "EfficiencyCalculator requires scoring_config from azure_devops_config.json. "
+                "Ensure ConfigLoader is initialized and config is passed to EfficiencyCalculator."
+            )
         
-        # Update with user-provided configuration
-        if scoring_config:
-            self._update_config(scoring_config)
-    
-    def _update_config(self, user_config: Dict):
-        """Recursively update configuration with user values."""
-        def merge_dicts(base_dict, update_dict):
-            for key, value in update_dict.items():
-                if key in base_dict and isinstance(base_dict[key], dict) and isinstance(value, dict):
-                    merge_dicts(base_dict[key], value)
-                else:
-                    base_dict[key] = value
-        
-        merge_dicts(self.config, user_config)
+        # Configuration is loaded entirely from JSON - no hardcoded defaults
+        self.config = scoring_config
     
     def calculate_fair_efficiency_metrics(self, 
                                         work_item: Dict,
@@ -225,8 +176,8 @@ class EfficiencyCalculator:
             base_estimate = float(original_estimate)
 
             # # If timeframe is provided, adjust the estimate proportionally
-            # if timeframe_start or timeframe_end:
-            #     return self._adjust_estimate_for_timeframe(work_item, base_estimate, timeframe_start, timeframe_end)
+            if timeframe_start or timeframe_end:
+                return self._adjust_estimate_for_timeframe(work_item, base_estimate, timeframe_start, timeframe_end)
 
             return base_estimate
 
@@ -360,54 +311,6 @@ class EfficiencyCalculator:
             current_date += timedelta(days=1)
             
         return total_days
-    
-    def _get_estimate_from_revisions(self, revisions: List[Dict]) -> float:
-        """
-        Search through revision history to find the last valid OriginalEstimate value.
-        
-        Args:
-            revisions: List of revision dictionaries from work item history
-            
-        Returns:
-            Last valid original estimate as float, or 0 if not found
-        """
-        if not revisions:
-            return 0.0
-        
-        # Sort revisions by revision number in descending order to get the most recent first
-        sorted_revisions = sorted(revisions, key=lambda x: x.get('revision', 0), reverse=True)
-        
-        for revision in sorted_revisions:
-            # Check if this revision has fields data (some revision formats may differ)
-            if isinstance(revision, dict):
-                # Look for OriginalEstimate in various possible field formats
-                fields = revision.get('fields', {})
-                
-                # Check different possible field names for original estimate
-                estimate_fields = [
-                    'Microsoft.VSTS.Scheduling.OriginalEstimate',
-                    'OriginalEstimate',
-                    'original_estimate'
-                ]
-                
-                for field_name in estimate_fields:
-                    estimate_value = fields.get(field_name)
-                    if estimate_value is not None and estimate_value > 0:
-                        try:
-                            return float(estimate_value)
-                        except (ValueError, TypeError):
-                            continue
-                
-                # Also check at the top level of revision data
-                for field_name in estimate_fields:
-                    estimate_value = revision.get(field_name)
-                    if estimate_value is not None and estimate_value > 0:
-                        try:
-                            return float(estimate_value)
-                        except (ValueError, TypeError):
-                            continue
-        
-        return 0.0
     
     def _calculate_business_hours_between_dates(self, start_date: datetime, end_date: datetime) -> float:
         """

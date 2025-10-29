@@ -22,24 +22,31 @@ class WorkItemOperations(AzureDevOps):
     
     def __init__(self, organization=None, personal_access_token=None, scoring_config=None, config_file=None):
         super().__init__(organization, personal_access_token)
-        
+
         # Initialize configuration loader
         self.config_loader = ConfigLoader(config_file or "config/azure_devops_config.json")
-        
+
+        # Get developer config from loader (always needed)
+        developer_config = self.config_loader.get_developer_scoring_config()
+
         # Merge scoring config with loaded config
         if scoring_config:
             efficiency_config = self.config_loader.get_efficiency_scoring_config()
             efficiency_config.update(scoring_config)
-            developer_config = self.config_loader.get_developer_scoring_config()
             if 'developer_score_weights' in scoring_config:
                 developer_config['weights'].update(scoring_config['developer_score_weights'])
-        
-        # Initialize helper modules
+
+        # Initialize helper modules with complete config from JSON (single source of truth)
         combined_config = {
             **self.config_loader.get_efficiency_scoring_config(),
-            **self.config_loader.get_developer_scoring_config(),
-            **self.config_loader.get_business_hours_config()
+            **developer_config,
+            **self.config_loader.get_business_hours_config(),
+            **self.config_loader.get_work_item_defaults()
         }
+        # Provide legacy access key expected by EfficiencyCalculator
+        combined_config['developer_score_weights'] = developer_config.get('weights', {})
+        combined_config['late_delivery_scores'] = self.config_loader.get_efficiency_scoring_config().get('late_delivery_scores', {})
+        combined_config['late_penalty_mitigation'] = self.config_loader.get_efficiency_scoring_config().get('late_penalty_mitigation', {})
         self.efficiency_calculator = EfficiencyCalculator(combined_config)
         self.project_discovery = ProjectDiscovery(self)
 
@@ -746,31 +753,31 @@ class WorkItemOperations(AzureDevOps):
     
     
     
-    def _get_total_assigned_items_by_developer(self, target_projects: List[Dict], 
-                                              assigned_to: List[str], 
+    def _get_total_assigned_items_by_developer(self, target_projects: List[Dict],
+                                              assigned_to: List[str],
                                               work_item_types: List[str],
                                               start_date: Optional[str] = None,
                                               end_date: Optional[str] = None) -> Dict[str, int]:
         """
         Get total count of assigned items per developer regardless of state,
         filtered by start/target dates within the specified timeframe.
-        
+
         Args:
             target_projects: List of projects to query
             assigned_to: List of developers to count items for
             work_item_types: List of work item types to include
             start_date: Start date for filtering (YYYY-MM-DD format)
             end_date: End date for filtering (YYYY-MM-DD format)
-            
+
         Returns:
             Dictionary mapping developer name to total assigned item count
         """
         # Build query to count ALL assigned items (no state filter)
         assigned_counts = {}
-        
+
         for developer in assigned_to:
             total_count = 0
-            
+
             # Query each project for this developer's total assigned items
             for project in target_projects:
                 try:
@@ -779,8 +786,9 @@ class WorkItemOperations(AzureDevOps):
                         f"[System.AssignedTo] = '{developer}'",
                         f"[System.WorkItemType] IN ('{"', '".join(work_item_types)}')"
                     ]
-                    
+
                     # Add date filtering for start_date or target_date within timeframe
+                    # StartDate and TargetDate are DATE fields (not DateTime), so use simple YYYY-MM-DD format
                     if start_date and end_date:
                         date_condition = f"""(
                             ([Microsoft.VSTS.Scheduling.StartDate] >= '{start_date}' AND [Microsoft.VSTS.Scheduling.StartDate] <= '{end_date}') OR
@@ -799,20 +807,28 @@ class WorkItemOperations(AzureDevOps):
                             [Microsoft.VSTS.Scheduling.TargetDate] <= '{end_date}'
                         )"""
                         conditions.append(date_condition)
-                    
+
                     count_query = f"SELECT [System.Id] FROM WorkItems WHERE {' AND '.join(conditions)}"
-                    
+
                     endpoint = f"{project['id']}/_apis/wit/wiql?api-version=7.0"
                     response = self.handle_request(
                         "POST",
                         endpoint,
                         data={"query": count_query}
                     )
-                    
+
+                    project_count = 0
                     if response and 'workItemRelations' in response:
-                        total_count += len(response['workItemRelations'])
+                        project_count = len(response['workItemRelations'])
+                        total_count += project_count
                     elif response and 'workItems' in response:
-                        total_count += len(response['workItems'])
+                        project_count = len(response['workItems'])
+                        total_count += project_count
+
+                    # Debug logging for first developer and first few projects
+                    if developer == assigned_to[0] and total_count < 200:
+                        if project_count > 0:
+                            print(f"      DEBUG: {developer} in {project['name']}: found {project_count} items")
                         
                 except Exception as e:
                     print(f"Warning: Failed to get assigned count for {developer} in project {project['name']}: {e}")
@@ -922,8 +938,9 @@ class WorkItemOperations(AzureDevOps):
         if not work_items:
             return self._empty_developer_metrics(total_assigned_items)
         
-        # Use provided total or fallback to filtered items count
-        total_items = total_assigned_items if total_assigned_items is not None else len(work_items)
+        # Always base totals on the filtered query set so summary counts match detailed export
+        total_items = len(work_items)
+        assigned_scope_total = total_assigned_items if total_assigned_items is not None else total_items
         completed_items = 0
         items_with_efficiency = 0  # Only items with active_time > 0 AND estimated_hours > 0
         items_with_estimated = 0  # Items with estimated_hours > 0 (for confidence calculation)
@@ -995,6 +1012,10 @@ class WorkItemOperations(AzureDevOps):
 
         # Calculate averages and percentages
         completion_rate = (completed_items / total_items) * 100 if total_items > 0 else 0
+        assigned_scope_completion_rate = (
+            (completed_items / assigned_scope_total) * 100
+            if assigned_scope_total not in (None, 0) else completion_rate
+        )
 
         # Efficiency: ONLY from items with active_time > 0 AND estimated_hours > 0
         if items_with_efficiency > 0:
@@ -1032,6 +1053,8 @@ class WorkItemOperations(AzureDevOps):
             'items_with_efficiency': items_with_efficiency,
             'sample_confidence': round(confidence * 100, 2) if items_with_efficiency > 0 else 0,
             'completion_rate': round(completion_rate, 2),
+            'assigned_scope_items': assigned_scope_total,
+            'assigned_scope_completion_rate': round(assigned_scope_completion_rate, 2),
             'on_time_delivery_percentage': round(on_time_delivery, 2),
             'average_fair_efficiency': round(avg_fair_efficiency, 2),
             'average_delivery_score': round(avg_delivery_score, 2),
@@ -1050,12 +1073,16 @@ class WorkItemOperations(AzureDevOps):
     
     def _empty_developer_metrics(self, total_assigned_items: int = 0) -> Dict:
         """Return empty metrics structure for developers with no work items."""
+        total_items = 0
+        assigned_scope_total = total_assigned_items or 0
         return {
-            'total_work_items': total_assigned_items or 0,
+            'total_work_items': total_items,
             'completed_items': 0,
             'items_with_efficiency': 0,
             'sample_confidence': 0,
             'completion_rate': 0,
+            'assigned_scope_items': assigned_scope_total,
+            'assigned_scope_completion_rate': 0,
             'on_time_delivery_percentage': 0,
             'average_fair_efficiency': 0,
             'average_delivery_score': 0,
