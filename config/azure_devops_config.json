@@ -26,10 +26,24 @@
     "smart_filtering": true,
     "default_developers": [
       "Luis Nocedal",
-      "Carlos Vazquez",
+      "Emmanuel Pérez",
+      "Cristian Soria",
       "Fernando Alcaraz",
-      "Rodrigo Mendoza",
-      "Jorge Hernandez"
+      "Osvaldo De Luna",
+      "Diego Lopez",
+      "Carlos Vazquez",
+      "Damian Gaspar",
+      "Gerardo Melgoza",
+      "Uriel Cortés",
+      "Alejandro Valenzuela",
+      "Hans Izarraraz",
+      "Ximena Segura",
+      "Andrés Escobedo",
+      "Fernando Hernández",
+      "Alvaro Torres",
+      "Pablo Ruiz",
+      "Daniel Cayola",
+      "Sebastián Rojas"
     ]
   },
   "state_categories": {
@@ -64,7 +78,7 @@
     ]
   },
   "business_hours": {
-    "office_start_hour": 9,
+    "office_start_hour": 8,
     "office_end_hour": 18,
     "max_hours_per_day": 8,
     "timezone": "America/Mexico_City",

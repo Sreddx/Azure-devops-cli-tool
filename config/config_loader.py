@@ -68,7 +68,8 @@ class ConfigLoader:
                 "work_item_types": ["Task", "User Story", "Bug", "Feature"],
                 "date_field": "ClosedDate",
                 "include_active_items": True,
-                "smart_filtering": True
+                "smart_filtering": True,
+                "default_developers": []
             },
             "state_categories": {
                 "assigned_states": ["New"],
@@ -78,23 +79,62 @@ class ConfigLoader:
                 "ignored_states": ["Removed", "Discarded", "Cancelled"]
             },
             "business_hours": {
-                "office_start_hour": 9,
-                "office_end_hour": 17,
+                "office_start_hour": 8,
+                "office_end_hour": 18,
                 "max_hours_per_day": 8,
                 "timezone": "America/Mexico_City",
                 "working_days": [1, 2, 3, 4, 5]
             },
             "efficiency_scoring": {
                 "completion_bonus_percentage": 0.20,
-                "max_efficiency_cap": 150.0
+                "max_efficiency_cap": 150.0,
+                "early_delivery_thresholds": {
+                    "very_early_days": 5,
+                    "early_days": 3,
+                    "slightly_early_days": 1
+                },
+                "early_delivery_scores": {
+                    "very_early": 130.0,
+                    "early": 120.0,
+                    "slightly_early": 110.0,
+                    "on_time": 100.0
+                },
+                "early_delivery_bonuses": {
+                    "very_early": 1.0,
+                    "early": 0.5,
+                    "slightly_early": 0.25
+                },
+                "late_delivery_scores": {
+                    "late_1_3": 95.0,
+                    "late_4_7": 90.0,
+                    "late_8_14": 85.0,
+                    "late_15_plus": 70.0
+                },
+                "late_penalty_mitigation": {
+                    "late_1_3": 2.0,
+                    "late_4_7": 4.0,
+                    "late_8_14": 6.0,
+                    "late_15_plus": 8.0
+                }
             },
             "developer_scoring": {
                 "weights": {
-                    "fair_efficiency": 0.4,
+                    "fair_efficiency": 0.2,
                     "delivery_score": 0.3,
-                    "completion_rate": 0.2,
-                    "on_time_delivery": 0.1
-                }
+                    "completion_rate": 0.3,
+                    "on_time_delivery": 0.2
+                },
+                "minimum_items_for_scoring": 3
+            },
+            "work_item_defaults": {
+                "estimated_hours_by_type": {
+                    "user story": 8.0,
+                    "task": 4.0,
+                    "bug": 2.0,
+                    "feature": 16.0,
+                    "default": 4.0
+                },
+                "minimum_estimate_hours": 1.0
             }
         }
     
@@ -105,6 +145,10 @@ class ConfigLoader:
     def get_work_item_types(self) -> List[str]:
         """Get list of work item types to fetch."""
         return self.config.get("work_item_query", {}).get("work_item_types", [])
+    
+    def get_default_developers(self) -> List[str]:
+        """Get default developers to query when none are provided."""
+        return self.config.get("work_item_query", {}).get("default_developers", [])
     
     def get_state_categories(self) -> Dict[str, List[str]]:
         """Get state categories configuration."""
@@ -141,6 +185,10 @@ class ConfigLoader:
     def get_developer_scoring_config(self) -> Dict[str, Any]:
         """Get developer scoring configuration."""
         return self.config.get("developer_scoring", {})
+    
+    def get_work_item_defaults(self) -> Dict[str, Any]:
+        """Get work item defaults configuration."""
+        return self.config.get("work_item_defaults", {})
     
     def should_include_work_item(self, work_item: Dict[str, Any]) -> bool:
         """

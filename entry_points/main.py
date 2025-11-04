@@ -207,6 +207,14 @@ def handle_work_item_query(args, organization, personal_access_token):
     # Create WorkItemOperations instance with scoring configuration
     work_item_ops = WorkItemOperations(organization, personal_access_token, scoring_config)
     
+    # Use default developers from configuration when none are provided via CLI
+    if not assigned_to:
+        default_developers = work_item_ops.config_loader.get_default_developers()
+        if default_developers:
+            assigned_to = [dev.strip() for dev in default_developers if dev.strip()]
+            if assigned_to:
+                print(f"Using default developers from config: {', '.join(assigned_to)}")
+    
     # Determine query scope
     if args.project_id:
         print(f"Querying single project: {args.project_id}")
